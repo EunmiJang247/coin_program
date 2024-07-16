@@ -32,7 +32,8 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - TZ=Asia/Seoul
     # command: tail -F /dev/null
-    command: npm start
+    # command: npm start
+    command: yarn run dev
 
   revers_proxy:
     build: ./nginx

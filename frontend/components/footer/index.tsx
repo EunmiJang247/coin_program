@@ -8,7 +8,7 @@ interface Props {
 const Footer: React.FC<Props> = ({ className }) => {
   return (
     <div className={combineClassNames(styles.cont, className)}>
-      <span>푸우터</span>
+      <span>쩐당..</span>
     </div>
   );
 };
