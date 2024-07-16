@@ -1,27 +1,29 @@
 from apscheduler.schedulers.background import BackgroundScheduler
-from django_apscheduler.jobstores import DjangoJobStore
-from django_apscheduler.jobstores import register_events
-
+from django_apscheduler.jobstores import register_events, DjangoJobStore
+from apscheduler.triggers.cron import CronTrigger
+import logging
+import time
+from django.db import close_old_connections
+import traceback
 from tradeapp.views_scheduler import check_current_price
-from django_apscheduler.models import DjangoJob
 
-scheduler = BackgroundScheduler()
-scheduler.add_jobstore(DjangoJobStore(), "default")
+logger = logging.getLogger('scheduler')
 
-def start_scheduler(sender, **kwargs):
-    if not scheduler.running:
-        DjangoJob.objects.all().delete()
-        register_events(scheduler)
-        scheduler.start()
+def start():
+	scheduler = BackgroundScheduler()
+	# scheduler.add_jobstore(DjangoJobStore(), 'djangojobstore')
+	# Django의 데이터베이스에서 job을 읽어오지 않고, 기본적으로 메모리에서만 작업을 관리하게 됩니다
+	register_events(scheduler)
 
-def hi():
-    check_current_price()
+	# 카메라 작동확인 및 사진 업데이트
+	@scheduler.scheduled_job('interval', minutes=1, name='price_check')
+	def notification_report_create():
+		try:
+			start_time = time.time()
+			check_current_price()
 
-# 기존 작업을 확인하고 삭제한 후 추가
-job_id = 'hidd'
-existing_job = scheduler.get_job(job_id)
-if existing_job:
-    scheduler.remove_job(job_id)
-
-scheduler.add_job(hi, 'interval', seconds=5, id=job_id)
-
+		except Exception as e:
+			logger.error(e)
+			logger.error(traceback.format_exc())
+			
+	scheduler.start()

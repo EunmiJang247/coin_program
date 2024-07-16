@@ -11,8 +11,7 @@ RUN apt-get update -y && apt-get upgrade -y
 # 패키지 목록을 업데이트 & 설치된 패키지를 최신 버전으로 업그레이드
 
 RUN apt-get install -y binutils libproj-dev gdal-bin 
-RUN apt-get install -y libgl1-mesa-glx && \
-apt-get clean
+RUN apt-get install -y libgl1-mesa-glx
 
 WORKDIR /usr/src/app
 # 작업 디렉토리 설정

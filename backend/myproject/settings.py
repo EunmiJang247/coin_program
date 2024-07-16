@@ -1,13 +1,19 @@
 from pathlib import Path
 import os
+from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-vy4cxnx9+zt-t5pt4l2vw58ywdmnb8%kjew29ewsfju3n=(*mv'
+SECRET_KEY = config('SECRET_KEY')
 
-DEBUG = True
-
-ALLOWED_HOSTS = []
+# DEBUG = True
+DEBUG = False
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', f"{os.environ.get('EXPORT_HOST')}"]
+CSRF_TRUSTED_ORIGINS = [
+    f"http://localhost:{os.environ.get('EXPORT_PORT')}", f"http://127.0.0.1:{os.environ.get('EXPORT_PORT')}", 
+    f"http://0.0.0.0:{os.environ.get('EXPORT_PORT')}", f"http://{os.environ.get('EXPORT_HOST')}:{os.environ.get('EXPORT_PORT')}",
+    f"http://{os.environ.get('EXPORT_HOST')}:8282"
+]
 
 INSTALLED_APPS = [
 	'django.contrib.admin',
@@ -16,6 +22,7 @@ INSTALLED_APPS = [
 	'django.contrib.sessions',
 	'django.contrib.messages',
 	'django.contrib.staticfiles',
+  'rest_framework',
 	'django_apscheduler',
 	'baseapp',
 	'tradeapp'

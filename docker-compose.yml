@@ -14,7 +14,7 @@ services:
     # ipc: host: IPC(Inter-Process Communication) 네임스페이스를 호스트와 공유합니다. 이는 컨테이너와 호스트 간의 메모리 공유나 프로세스 간 통신을 허용
     environment:
       - DB_HOST=localhost
-      - DB_NAME=boilerplate
+      - DB_NAME=boilerplatedb
       - DB_USER=root
       - DB_PW=dmsal369
       - TZ=Asia/Seoul
@@ -31,7 +31,6 @@ services:
     environment:
       - CHOKIDAR_USEPOLLING=true
       - TZ=Asia/Seoul
-    # command: tail -F /dev/null
     # command: npm start
     command: yarn run dev
 

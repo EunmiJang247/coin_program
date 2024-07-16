@@ -9,8 +9,7 @@ docker-compose run backend
 docker-compose run frontend npm install 이거 한다음
 docker-compose run frontend npm run build 이거를 수동으로. 
 docker-compose run backend python manage.py makemigrations cameraapp
-docker-compose run backend python manage.py startapp baseapp
-
+docker-compose run backend python manage.py migrate
 
 처음 클론받고
 docker-compose up
@@ -20,3 +19,6 @@ docker-compose run frontend npm install
 docker-compose run frontend npm run build
 .next가 생긴다
 좀 기다리다가 localhost:85로 접속해보면 뜸. 
+docker-compose run backend python manage.py makemigrations
+
+docker exec -it 25cab1bff379 /bin/bash

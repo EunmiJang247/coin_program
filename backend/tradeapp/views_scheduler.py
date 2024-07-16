@@ -5,6 +5,7 @@ from datetime import datetime
 import time
 import os
 import uuid
+from tradeapp.services import get_current_price
 from rest_framework.response import Response
 
 from django.db.models import Q, Max, F, Count, Value
@@ -13,7 +14,7 @@ import requests
 
 def check_current_price():
 	try:
-		print('hi??')
+		get_current_price('luna')
 
 	except Exception as e:
 		print(f'check_current_price : {e}')
