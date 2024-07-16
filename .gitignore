@@ -288,6 +288,7 @@ sankey_test
 # next.js
 /frontend/.next/*
 /frontend/out/
+/frontend/.next/
 
 # production
 /frontend/build
