@@ -20,19 +20,19 @@ services:
       - TZ=Asia/Seoul
     command: python manage.py runserver 0.0.0.0:8000 --insecure
 
-  # frontend:
-  #   build: ./frontend
-  #   ports:
-  #     - 3005:3000
-  #   volumes:
-  #     - ./frontend:/usr/src/app
-  #   restart: always
-  #   ipc: host
-  #   environment:
-  #     - CHOKIDAR_USEPOLLING=true
-  #     - TZ=Asia/Seoul
-  #   # command: tail -F /dev/null
-  #   command: npm start
+  frontend:
+    build: ./frontend
+    ports:
+      - 3005:3000
+    volumes:
+      - ./frontend:/usr/src/app
+    restart: always
+    ipc: host
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - TZ=Asia/Seoul
+    # command: tail -F /dev/null
+    command: npm start
 
   revers_proxy:
     build: ./nginx
