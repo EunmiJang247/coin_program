@@ -37,7 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'baseapp'
+    'django_apscheduler',
+    'baseapp',
+    'tradeapp'
 ]
 
 MIDDLEWARE = [
@@ -122,3 +124,26 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# 스케줄러 관련 설정 시작
+# APScheduler_JOBSTORES = {
+#     'default': {
+#         'type': 'django_apscheduler.jobstores:DjangoJobStore',
+#     }
+# }
+
+# APScheduler_EXECUTORS = {
+#     'default': {
+#         'class': 'apscheduler.executors.pool:ThreadPoolExecutor',
+#         'max_workers': 20
+#     }
+# }
+
+# APScheduler_JOB_DEFAULTS = {
+#     'coalesce': False,
+#     'max_instances': 1
+# }
+
+# APScheduler_TIMEZONE = "UTC"
+
+# 스케줄러 관련 설정 끝

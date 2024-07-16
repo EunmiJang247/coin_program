@@ -5,7 +5,7 @@ services:
     build: ./backend
     # ./backend 디렉토리에서 Dockerfile을 찾아서 이 서비스를 빌드
     ports:
-      - 8005:8000
+      - 8009:8000
       # 호스트의 포트 8005를 컨테이너의 포트 8000에 매핑
     volumes:
       - ./backend:/usr/src/app
@@ -23,7 +23,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - 3005:3000
+      - 3009:3000
     volumes:
       - ./frontend:/usr/src/app
     restart: always
@@ -38,7 +38,7 @@ services:
   revers_proxy:
     build: ./nginx
     ports:
-      - 85:80
+      - 89:80
     depends_on:
       - backend
       - frontend
