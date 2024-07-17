@@ -158,6 +158,10 @@ LOGGING = {
 		'level': 'INFO',
 	},
 	'loggers': {
+        'scheduler': {
+			'handlers': ['console', 'file'],
+			'level': 'INFO',
+		},
 		'django': {
 			'handlers': ['console', 'file'],
 			'level': 'INFO',

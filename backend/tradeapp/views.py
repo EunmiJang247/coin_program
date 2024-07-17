@@ -9,16 +9,18 @@ from django.shortcuts import get_object_or_404
 import json
 from django.db.models import Q
 
-logger = logging.getLogger('cameraapp.views')
+from tradeapp.services import *
+
+logger = logging.getLogger('tradeapp.views')
 
 @api_view(['GET'])
-def open_long_position(request):
+def send_telegram_message(request):
 	if request.method == 'GET':
 		try:
-			print('hi')
-			return Response('hi', status=HTTPStatus.OK)
+			service_send_telegram_message('안녕하세요!')
+			return Response(True, status=HTTPStatus.OK)
 		except Exception as e:
-			logger.error(f'group_list_get_error : {e}')
+			logger.error(f'tsend_telegram_message_get_error : {e}')
 			logger.error(traceback.format_exc())
 			return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
 		finally:

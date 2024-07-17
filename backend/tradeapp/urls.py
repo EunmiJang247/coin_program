@@ -3,5 +3,5 @@ from django.urls import path, re_path
 from .views import *
 
 urlpatterns = [
-	path('open_long_position', open_long_position)
+	path('send_telegram_message', send_telegram_message)
 ]
