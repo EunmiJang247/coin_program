@@ -7,7 +7,7 @@ from django.db import close_old_connections
 import traceback
 from tradeapp.views_scheduler import check_current_price
 
-# logger = logging.getLogger('scheduler')
+logger = logging.getLogger('scheduler')
 
 def start():
 	scheduler = BackgroundScheduler()
@@ -24,7 +24,7 @@ def start():
 
 		except Exception as e:
 			pass
-			# logger.error(e)
-			# logger.error(traceback.format_exc())
+			logger.error(e)
+			logger.error(traceback.format_exc())
 			
 	scheduler.start()
