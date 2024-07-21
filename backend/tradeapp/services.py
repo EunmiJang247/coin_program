@@ -320,7 +320,7 @@ def service_is_current_status_declining(coin, interval):
 
 def service_check_continuous_decline_and_sum_threshold(coin, interval):
   '''
-  최근 4캔들 중에서 가격이 연속해서 내려갔고, 내려간 가격의 합이 처음 가격의 1% 이상인지 확인하는 함수
+  상승 추세에서 최근 4캔들 중에서 가격이 연속해서 내려갔고, 내려간 가격의 합이 처음 가격의 1% 이상인지 확인하는 함수
   
   Parameters:
   코인, 인터벌
@@ -350,7 +350,7 @@ def service_check_continuous_decline_and_sum_threshold(coin, interval):
     decline_threshold = coin_info.iloc[0]['Open'] * 0.005
     percentage = round((decline_sum / coin_info.iloc[0]['Open']) * 100, 2) # 내린 퍼센트
     
-    return is_continuous_decline, decline_sum >= decline_threshold, coin_info.iloc[3]['Open'], percentage
+    return is_continuous_decline, decline_sum >= decline_threshold, coin_info.iloc[2]['Open'], percentage
   
   except Exception as e:
     print(f"Error in check_continuous_decline_and_sum_threshold: {e}")
@@ -359,7 +359,7 @@ def service_check_continuous_decline_and_sum_threshold(coin, interval):
 
 def service_check_continuous_increase_and_sum_threshold(coin, interval):
   '''
-  최근 4캔들 중에서 가격이 연속해서 올라갔고, 올라간 가격의 합이 처음 가격의 1% 이상인지 확인하는 함수
+  하락추세에서 최근 4캔들 중에서 가격이 연속해서 올라갔고, 올라간 가격의 합이 처음 가격의 1% 이상인지 확인하는 함수
   
   Parameters:
   coin_info (DataFrame): 코인 정보가 담긴 데이터프레임. 최소 4개의 캔들 데이터를 포함해야 함.
@@ -389,16 +389,53 @@ def service_check_continuous_increase_and_sum_threshold(coin, interval):
     increase_threshold = coin_info.iloc[0]['Open'] * 0.005
     percentage = round((increase_sum / coin_info.iloc[0]['Open']) * 100, 2)
     
-    return is_continuous_increase, increase_sum >= increase_threshold, coin_info.iloc[3]['Open'], percentage
+    return is_continuous_increase, increase_sum >= increase_threshold, coin_info.iloc[2]['Open'], percentage
   
   except Exception as e:
     print(f"Error in check_continuous_increase_and_sum_threshold: {e}")
     return False
 
 
+def does_down_tail_has_long_than_top(coin, interval):
+    '''
+    그래프의 3개 이전 캔들 모두 위꼬리보다 아래꼬리가 길었는지(올라갈때를 판별하는 함수)
+    롱에 배팅할 경우 사용되고, 모두 음봉일 때 사용됨. 
+    '''
+    try:
+        coin_info = service_klines(coin, interval, 5)
+        does_down_tail_has_long = True
+        for i in range(1, 4):
+        #   1,2,3을 순회함
+            up_tail = coin_info.iloc[i]['High'] - coin_info.iloc[i]['Open']
+            down_tail = coin_info.iloc[i]['Close'] - coin_info.iloc[i]['Low']
+            if up_tail >= down_tail: 
+                does_down_tail_has_long = False
+        return does_down_tail_has_long
+
+    except Exception as e:
+        print(f"Error in check_continuous_increase_and_sum_threshold: {e}")
+        return False
 
 
+def does_top_tail_has_long_than_down(coin, interval):
+    '''
+    15분 그래프의 3개 이전 캔들 모두 아래꼬리보다 위꼬리가 길었는지(내려갈때를 판별하는 함수)
+    숏에 배팅할 경우 사용되고, 모두 양봉일 때 사용됨. 
+    '''
+    try:
+        coin_info = service_klines(coin, interval, 5)
+        does_top_tail_has_long = True
+        for i in range(1, 4):
+        #   1,2,3을 순회함
+            up_tail = coin_info.iloc[i]['High'] - coin_info.iloc[i]['Close']
+            down_tail = coin_info.iloc[i]['Open'] - coin_info.iloc[i]['Low']
+            if up_tail <= down_tail: 
+                does_top_tail_has_long = False
+        return does_top_tail_has_long
 
+    except Exception as e:
+        print(f"Error in check_continuous_increase_and_sum_threshold: {e}")
+        return False
 
 
 # def service_open_order_long(symbol, qty, object_sell_price):

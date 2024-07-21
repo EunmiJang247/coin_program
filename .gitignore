@@ -348,3 +348,4 @@ yarn-error.log*
 next-env.d.ts
 
 backend/.env
+frontend/yarn.lock

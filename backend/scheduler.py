@@ -4,7 +4,8 @@ from apscheduler.triggers.cron import CronTrigger
 import logging
 import time
 import traceback
-from tradeapp.views_scheduler import check_current_price, scenario1_buy
+from tradeapp.views_scheduler import check_current_price, scenario1_buy, scenario1_sell
+import datetime
 
 logger = logging.getLogger('scheduler')
 
@@ -20,25 +21,39 @@ def start():
 			start_time = time.time()
 			logger.info('check_weather_state =========================start')
 			check_current_price()
-			logger.info(f'check_weather_state ========================end {time.time()-start_time} second elapsed')
+			logger.info(f'check_weather_state ========================end')
 
 		except Exception as e:
 			pass
 			logger.error(e)
 			logger.error(traceback.format_exc())
 
-	# 시나리오1
-	@scheduler.scheduled_job('interval', minutes=3, name='scenario1_schedule', id='scenario1_schedule')
-	def scenario1_schedule():
+	# 시나리오1_구매
+	@scheduler.scheduled_job('interval', minutes=3, name='scenario1_schedule_buy', id='scenario1_schedule_buy')
+	def scenario1_schedule_buy():
 		try:
 			start_time = time.time()
 			logger.info('scenario1 =========================start')
 			scenario1_buy()
-			logger.info(f'scenario1 ========================end {time.time()-start_time} second elapsed')
+			logger.info(f'scenario1 ========================end')
 
 		except Exception as e:
 			pass
 			logger.error(e)
 			logger.error(traceback.format_exc())
 			
+	# 시나리오1_판매
+	@scheduler.scheduled_job('interval', minutes=3, name='scenario1_schedule_sell', id='scenario1_schedule_sell')
+	def scenario1_schedule_sell():
+		try:
+			start_time = time.time()
+			logger.info('scenario1 =========================start')
+			scenario1_sell()
+			logger.info(f'scenario1 ========================end')
+
+		except Exception as e:
+			pass
+			logger.error(e)
+			logger.error(traceback.format_exc())
+
 	scheduler.start()

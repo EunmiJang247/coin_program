@@ -61,7 +61,7 @@ def get_available_balance_usdt(request):
 	if request.method == 'GET':
 		try:
 			result = service_get_available_balance_usdt()
-			print(result)
+			print(type(result))
 			return Response(result, status=HTTPStatus.OK)
 		except Exception as e:
 			logger.error(f'tsend_telegram_message_get_error : {e}')
