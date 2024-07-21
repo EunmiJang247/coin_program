@@ -12,7 +12,7 @@ class BuyHistory(models.Model):
 	position = models.CharField(max_length=50) # 포지션
 	amount_usdt = models.DecimalField(max_digits=15, decimal_places=4) # 구매한 USDT 금액
 	goal_price_short = models.DecimalField(max_digits=15, decimal_places=4) # 목표 가격
-	position_close_price = models.DecimalField(max_digits=15, decimal_places=4)  # 포지션을 닫은 가격
+	current_price = models.DecimalField(max_digits=15, decimal_places=4)  # 현재가격
  
 	class Meta:
 		db_table = 'buy_history'
