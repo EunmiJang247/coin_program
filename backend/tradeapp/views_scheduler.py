@@ -44,64 +44,62 @@ def scenario1_buy():
 
             # print('시나리오1, # 내리는 추세에서 올랐을 때 숏에 배팅하는 시나리오.')
             is_macd_declining = service_is_current_status_declining(coin, '15m')[0] # 이평선이 음인지
-            if is_macd_declining:
-                is_successing_rising = service_check_continuous_increase_and_sum_threshold(coin, '15m')
-                if is_successing_rising[0]:
-                    successing_rising = is_successing_rising[0] # 연속해서 오르는가
-                    more_than_two_percent_short = is_successing_rising[1] # 오른게 1% 이상인가
-                    goal_price_short = is_successing_rising[2] # 목표가
-                    current_price = get_current_price(coin)
-                    is_successing_rising_result = successing_rising and more_than_two_percent_short # 위에조건을 둘다 만족하는가
-                    does_top_tail = does_top_tail_has_long_than_down(coin, '15m')
-                    # 이전 3개 캔들의 윗꼬리가 아래꼬리보다 긴가
+            is_successing_rising = service_check_continuous_increase_and_sum_threshold(coin, '15m')
+            successing_rising = is_successing_rising[0] # 연속해서 오르는가
+            more_than_two_percent_short = is_successing_rising[1] # 오른게 1% 이상인가
+            goal_price_short = is_successing_rising[2] # 목표가
+            current_price = get_current_price(coin)
+            is_successing_rising_result = successing_rising and more_than_two_percent_short # 위에조건을 둘다 만족하는가
+            does_top_tail = does_top_tail_has_long_than_down(coin, '15m')
+            # 이전 3개 캔들의 윗꼬리가 아래꼬리보다 긴가
 
-                    if is_macd_declining and is_successing_rising_result and does_top_tail:
-                        #  and current_price > goal_price_short
-                        service_send_telegram_message(f'{coin} 숏 거세요')
-                        BuyHistory.objects.create(
-                            coin=coin,
-                            position='short',
-                            amount_usdt=12,
-                            goal_price_short=goal_price_short,
-                            current_price=current_price
-                        )
-                        print(coin, '이거숏 거세요')
+            if is_macd_declining and is_successing_rising_result and does_top_tail:
+                #  and current_price > goal_price_short
+                service_send_telegram_message(f'{coin} 숏 거세요')
+                BuyHistory.objects.create(
+                    coin=coin,
+                    position='short',
+                    amount_usdt=12,
+                    goal_price_short=goal_price_short,
+                    current_price=current_price
+                )
+                print(coin, '이거숏 거세요')
 
-                    logger.info(f'is_macd_declining {is_macd_declining}')
-                    logger.info(f'is_successing_rising_result {is_successing_rising_result}')
-                    logger.info(f'does_top_tail {does_top_tail}')
-                    logger.info(f'current_price {current_price}')
-                    logger.info(f'goal_price_short {goal_price_short}')
+            logger.info(f'is_macd_declining {is_macd_declining}')
+            logger.info(f'is_successing_rising_result {is_successing_rising_result}')
+            logger.info(f'does_top_tail {does_top_tail}')
+            logger.info(f'current_price {current_price}')
+            logger.info(f'goal_price_short {goal_price_short}')
 
             # print('시나리오1, # 오르는 추세에서 내렸을 때 롱에 배팅하는 시나리오.')
             is_macd_rising = service_is_current_status_rising(coin, '15m')[0] # 이평선이 양인지
-            if is_macd_rising:
-                is_successing_declining = service_check_continuous_decline_and_sum_threshold(coin, '15m')
-                if is_successing_declining[0]:
-                    successing_declining = is_successing_declining[0] # 연속해서 내리는가
-                    more_than_two_percent_long = is_successing_declining[1] # 내린게 1% 이상인가
-                    goal_price_long = is_successing_declining[2] # 목표가
-                    current_price = get_current_price(coin) 
-                    is_successing_declining_result = successing_declining and more_than_two_percent_long # 위에조건을 둘다 만족하는가
-                    does_down_tail = does_down_tail_has_long_than_top(coin, '15m') # 이전 3개 캔들의 아래꼬리가 윗꼬리보다 긴가
+            is_successing_declining = service_check_continuous_decline_and_sum_threshold(coin, '15m')
+            successing_declining = is_successing_declining[0] # 연속해서 내리는가
+            more_than_two_percent_long = is_successing_declining[1] # 내린게 1% 이상인가
+            goal_price_long = is_successing_declining[2] # 목표가
+            current_price = get_current_price(coin) 
+            is_successing_declining_result = successing_declining and more_than_two_percent_long # 위에조건을 둘다 만족하는가
+            does_down_tail = does_down_tail_has_long_than_top(coin, '15m') # 이전 3개 캔들의 아래꼬리가 윗꼬리보다 긴가
 
-                    if is_macd_rising and is_successing_declining_result and does_down_tail:
-                        #  and current_price < goal_price_long
-                        service_send_telegram_message(f'{coin} 롱 거세요')
-                        BuyHistory.objects.create(
-                            coin=coin,
-                            position='long', 
-                            amount_usdt=12,
-                            goal_price_short=goal_price_long,
-                            current_price=current_price
-                        )
-                        logger.info(f'{coin} 롱 거세요')
+            if is_macd_rising and is_successing_declining_result and does_down_tail:
+                #  and current_price < goal_price_long
+                service_send_telegram_message(f'{coin} 롱 거세요')
+                BuyHistory.objects.create(
+                    coin=coin,
+                    position='long', 
+                    amount_usdt=12,
+                    goal_price_short=goal_price_long,
+                    current_price=current_price
+                )
+                logger.info(f'{coin} 롱 거세요')
 
-                    logger.info(f'is_macd_rising {is_macd_rising}')
-                    logger.info(f'is_successing_declining_result {is_successing_declining_result}')
-                    logger.info(f'does_down_tail {does_down_tail}')
-                    logger.info(f'current_price {current_price}')
-                    logger.info(f'goal_price_long {goal_price_long}')
+            logger.info(f'is_macd_rising {is_macd_rising}')
+            logger.info(f'is_successing_declining_result {is_successing_declining_result}')
+            logger.info(f'does_down_tail {does_down_tail}')
+            logger.info(f'current_price {current_price}')
+            logger.info(f'goal_price_long {goal_price_long}')
+
+            time.sleep(1)
 
     except Exception as e:
         print(f'Error in scenario1: {e}')
