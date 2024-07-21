@@ -406,9 +406,10 @@ def does_down_tail_has_long_than_top(coin, interval):
         does_down_tail_has_long = True
         for i in range(1, 4):
         #   1,2,3을 순회함
-            up_tail = coin_info.iloc[i]['High'] - coin_info.iloc[i]['Open']
+            # up_tail = coin_info.iloc[i]['High'] - coin_info.iloc[i]['Open']
             down_tail = coin_info.iloc[i]['Close'] - coin_info.iloc[i]['Low']
-            if up_tail >= down_tail: 
+            # if up_tail >= down_tail: 
+            if  down_tail == 0: 
                 does_down_tail_has_long = False
         return does_down_tail_has_long
 
@@ -428,8 +429,9 @@ def does_top_tail_has_long_than_down(coin, interval):
         for i in range(1, 4):
         #   1,2,3을 순회함
             up_tail = coin_info.iloc[i]['High'] - coin_info.iloc[i]['Close']
-            down_tail = coin_info.iloc[i]['Open'] - coin_info.iloc[i]['Low']
-            if up_tail <= down_tail: 
+            # down_tail = coin_info.iloc[i]['Open'] - coin_info.iloc[i]['Low']
+            # if up_tail <= down_tail:
+            if up_tail == 0: 
                 does_top_tail_has_long = False
         return does_top_tail_has_long
 
