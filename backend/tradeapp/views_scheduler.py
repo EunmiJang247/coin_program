@@ -59,12 +59,18 @@ def scenario1_buy():
                     service_send_telegram_message(f'{coin} 숏 거세요')
                     BuyHistory.objects.create(
                         coin=coin,
-                        position='short',  # Example position
-                        amount_usdt=200.0,  # Example amount
-                        goal_price_short=250.0,  # Example goal price
-                        position_close_price=240.0  # Example close price
+                        position='short',
+                        amount_usdt=200.0,
+                        goal_price_short=250.0,
+                        position_close_price=240.0
                     )
                     print(coin, '이거숏 거세요')
+
+                logger.info(f'is_macd_declining {is_macd_declining}')
+                logger.info(f'is_successing_rising_result {is_successing_rising_result}')
+                logger.info(f'does_top_tail {does_top_tail}')
+                logger.info(f'current_price {current_price}')
+                logger.info(f'goal_price_short {goal_price_short}')
 
             # print('시나리오1, # 오르는 추세에서 내렸을 때 롱에 배팅하는 시나리오.')
             is_macd_rising = service_is_current_status_rising(coin, '15m')[0] # 이평선이 양인지
@@ -82,31 +88,18 @@ def scenario1_buy():
                     service_send_telegram_message(f'{coin} 롱 거세요')
                     BuyHistory.objects.create(
                         coin=coin,
-                        position='long',  # Example position
-                        amount_usdt=200.0,  # Example amount
-                        goal_price_short=250.0,  # Example goal price
-                        position_close_price=240.0  # Example close price
+                        position='long', 
+                        amount_usdt=200.0,
+                        goal_price_short=250.0,
+                        position_close_price=240.0
                     )
                     logger.info(f'{coin} 롱 거세요')
 
-            logger.info('===============================================================================')
-            logger.info(coin)
-
-            logger.info(f'is_macd_declining {is_macd_declining}')
-            logger.info(f'is_successing_rising_result {is_successing_rising_result}')
-            logger.info(f'does_top_tail {does_top_tail}')
-            logger.info(f'current_price {current_price}')
-            logger.info(f'goal_price_short {goal_price_short}')
-            
-            logger.info('===============================================================================')
-
-            logger.info(f'is_macd_rising {is_macd_rising}')
-            logger.info(f'is_successing_declining_result {is_successing_declining_result}')
-            logger.info(f'does_down_tail {does_down_tail}')
-            logger.info(f'current_price {current_price}')
-            logger.info(f'goal_price_long {goal_price_long}')
-
-            logger.info('===============================================================================')
+                logger.info(f'is_macd_rising {is_macd_rising}')
+                logger.info(f'is_successing_declining_result {is_successing_declining_result}')
+                logger.info(f'does_down_tail {does_down_tail}')
+                logger.info(f'current_price {current_price}')
+                logger.info(f'goal_price_long {goal_price_long}')
 
     except Exception as e:
         print(f'Error in scenario1: {e}')
