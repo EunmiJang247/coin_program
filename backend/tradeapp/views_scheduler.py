@@ -6,7 +6,7 @@ import time
 import os
 import uuid
 from tradeapp.models import BuyHistory
-from tradeapp.services import does_down_tail_has_long_than_top, does_top_tail_has_long_than_down, get_current_price, say_hi, service_check_continuous_decline_and_sum_threshold, service_check_continuous_increase_and_sum_threshold, service_check_if_ihave_this_coin, service_get_available_balance_usdt, service_get_tickers_usdt, service_get_top_ten_coins, service_is_current_status_declining, service_is_current_status_rising, service_send_telegram_message
+from tradeapp.services import does_down_tail_has_long_than_top, does_top_tail_has_long_than_down, get_current_price, say_hi, service_check_continuous_decline_and_sum_threshold, service_check_continuous_increase_and_sum_threshold, service_check_if_ihave_this_coin, service_get_available_balance_usdt, service_get_tickers_usdt, service_get_top_ten_coins, service_is_current_status_declining, service_is_current_status_rising, service_open_long_position, service_open_short_position, service_send_telegram_message
 from rest_framework.response import Response
 
 from django.db.models import Q, Max, F, Count, Value
@@ -64,6 +64,7 @@ def scenario1_buy():
                     current_price=current_price
                 )
                 print(coin, '이거숏 거세요')
+                service_open_short_position(coin, 12, 10, current_price, goal_price_short)
 
             logger.info(f'is_macd_declining {is_macd_declining}')
             logger.info(f'is_successing_rising_result {is_successing_rising_result}')
@@ -91,7 +92,7 @@ def scenario1_buy():
                     goal_price_short=goal_price_long,
                     current_price=current_price
                 )
-                logger.info(f'{coin} 롱 거세요')
+                service_open_long_position(coin, 12, 10, current_price, goal_price_short)
 
             logger.info(f'is_macd_rising {is_macd_rising}')
             logger.info(f'is_successing_declining_result {is_successing_declining_result}')

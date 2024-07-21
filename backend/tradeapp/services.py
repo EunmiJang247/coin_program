@@ -437,8 +437,23 @@ def does_top_tail_has_long_than_down(coin, interval):
         print(f"Error in check_continuous_increase_and_sum_threshold: {e}")
         return False
 
+def service_open_long_position(coin, usdt_amount, leverage, current_price, object_sell_price):
+    qty_precision = get_qty_precision(coin)
+    qty = round(float(round(usdt_amount / current_price, 6)) * leverage, qty_precision)
 
-def service_open_order_long(symbol, qty, object_sell_price):
-    price = float(client.ticker_price(symbol)['price']) # 현재 코인의 가격
-    qty_precision = get_qty_precision(symbol)
-    price_precision = get_price_precision(symbol)
+    try:
+        client.new_order(symbol=coin, side="BUY", type='LIMIT', quantity=qty, timeInForce='GTC', price=current_price)
+        client.new_order(symbol=coin, side="SELL", type='TAKE_PROFIT_MARKET', quantity=qty, timeInForce='GTC', stopPrice=object_sell_price)
+    except ClientError as e:
+        print(f"주문 오류 발생: {e}")
+
+
+def service_open_short_position(coin, usdt_amount, leverage, current_price, object_sell_price):
+    qty_precision = get_qty_precision(coin)
+    qty = round(float(round(usdt_amount / current_price, 6)) * leverage, qty_precision)
+
+    try:
+        client.new_order(symbol=coin, side="SELL", type='LIMIT', quantity=qty, timeInForce='GTC', price=current_price)
+        client.new_order(symbol=coin, side="BUY", type='TAKE_PROFIT_MARKET', quantity=qty, timeInForce='GTC', stopPrice=object_sell_price)
+    except ClientError as e:
+        print(f"주문 오류 발생: {e}")
