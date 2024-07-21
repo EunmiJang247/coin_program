@@ -61,7 +61,7 @@ def scenario1_buy():
                         coin=coin,
                         position='short',
                         amount_usdt=200.0,
-                        goal_price_short=250.0,
+                        goal_price_short=goal_price_short,
                         position_close_price=240.0
                     )
                     print(coin, '이거숏 거세요')
@@ -90,7 +90,7 @@ def scenario1_buy():
                         coin=coin,
                         position='long', 
                         amount_usdt=200.0,
-                        goal_price_short=250.0,
+                        goal_price_short=goal_price_long,
                         position_close_price=240.0
                     )
                     logger.info(f'{coin} 롱 거세요')

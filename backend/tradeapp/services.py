@@ -350,7 +350,7 @@ def service_check_continuous_decline_and_sum_threshold(coin, interval):
     decline_threshold = coin_info.iloc[0]['Open'] * 0.005
     percentage = round((decline_sum / coin_info.iloc[0]['Open']) * 100, 2) # 내린 퍼센트
     
-    return is_continuous_decline, decline_sum >= decline_threshold, coin_info.iloc[2]['Open'], percentage
+    return is_continuous_decline, decline_sum >= decline_threshold, coin_info.iloc[3]['Open'], percentage
   
   except Exception as e:
     print(f"Error in check_continuous_decline_and_sum_threshold: {e}")
@@ -389,7 +389,7 @@ def service_check_continuous_increase_and_sum_threshold(coin, interval):
     increase_threshold = coin_info.iloc[0]['Open'] * 0.005
     percentage = round((increase_sum / coin_info.iloc[0]['Open']) * 100, 2)
     
-    return is_continuous_increase, increase_sum >= increase_threshold, coin_info.iloc[2]['Open'], percentage
+    return is_continuous_increase, increase_sum >= increase_threshold, coin_info.iloc[3]['Open'], percentage
   
   except Exception as e:
     print(f"Error in check_continuous_increase_and_sum_threshold: {e}")
@@ -438,7 +438,7 @@ def does_top_tail_has_long_than_down(coin, interval):
         return False
 
 
-# def service_open_order_long(symbol, qty, object_sell_price):
-#     price = float(client.ticker_price(symbol)['price']) # 현재 코인의 가격
-#     qty_precision = get_qty_precision(symbol)
-#     price_precision = get_price_precision(symbol)
+def service_open_order_long(symbol, qty, object_sell_price):
+    price = float(client.ticker_price(symbol)['price']) # 현재 코인의 가격
+    qty_precision = get_qty_precision(symbol)
+    price_precision = get_price_precision(symbol)
