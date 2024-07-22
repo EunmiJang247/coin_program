@@ -53,8 +53,7 @@ def scenario1_buy():
             does_top_tail = does_top_tail_has_long_than_down(coin, '15m')
             # 이전 3개 캔들의 윗꼬리가 아래꼬리보다 긴가
 
-            if is_macd_declining and is_successing_rising_result and does_top_tail:
-                #  and current_price > goal_price_short
+            if is_macd_declining and is_successing_rising_result and does_top_tail and current_price > goal_price_short:
                 service_send_telegram_message(f'{coin} 숏 거세요')
                 BuyHistory.objects.create(
                     coin=coin,
@@ -82,8 +81,7 @@ def scenario1_buy():
             is_successing_declining_result = successing_declining and more_than_two_percent_long # 위에조건을 둘다 만족하는가
             does_down_tail = does_down_tail_has_long_than_top(coin, '15m') # 이전 3개 캔들의 아래꼬리가 윗꼬리보다 긴가
 
-            if is_macd_rising and is_successing_declining_result and does_down_tail:
-                #  and current_price < goal_price_long
+            if is_macd_rising and is_successing_declining_result and does_down_tail and current_price < goal_price_long:
                 service_send_telegram_message(f'{coin} 롱 거세요')
                 BuyHistory.objects.create(
                     coin=coin,
