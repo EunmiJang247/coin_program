@@ -105,14 +105,14 @@
   "resolved" "https://registry.npmjs.org/@next/font/-/font-13.0.7.tgz"
   "version" "13.0.7"
 
-"@next/swc-linux-x64-gnu@13.0.7":
-  "integrity" "sha512-/ygUIiMMTYnbKlFs5Ba9J5k/tNxFWy8eI1bBF8UuMTvV8QJHl/aLDiA5dwsei2kk99/cu3eay62JnJXkSk3RSQ=="
-  "resolved" "https://registry.npmjs.org/@next/swc-linux-x64-gnu/-/swc-linux-x64-gnu-13.0.7.tgz"
+"@next/swc-linux-arm64-gnu@13.0.7":
+  "integrity" "sha512-RXo8tt6ppiwyS6hpDw3JdAjKcdVewsefxnxk9xOH4mRhMyq9V2lQx0e24X/dRiZqkx3jnWReR2WRrUlgN1UkSQ=="
+  "resolved" "https://registry.npmjs.org/@next/swc-linux-arm64-gnu/-/swc-linux-arm64-gnu-13.0.7.tgz"
   "version" "13.0.7"
 
-"@next/swc-linux-x64-musl@13.0.7":
-  "integrity" "sha512-dLzr6AL77USJN0ejgx5AS8O8SbFlbYTzs0XwAWag4oQpUG2p3ARvxwQgYQ0Z+6EP0zIRZ/XfLkN/mhsyi3m4PA=="
-  "resolved" "https://registry.npmjs.org/@next/swc-linux-x64-musl/-/swc-linux-x64-musl-13.0.7.tgz"
+"@next/swc-linux-arm64-musl@13.0.7":
+  "integrity" "sha512-RWpnW+bmfXyxyY7iARbueYDGuIF+BEp3etLeYh/RUNHb9PhOHLDgJOG8haGSykud3a6CcyBI8hEjqOhoObaDpw=="
+  "resolved" "https://registry.npmjs.org/@next/swc-linux-arm64-musl/-/swc-linux-arm64-musl-13.0.7.tgz"
   "version" "13.0.7"
 
 "@nodelib/fs.scandir@2.1.5":

@@ -347,7 +347,7 @@ def service_check_continuous_decline_and_sum_threshold(coin, interval):
     
     # 내려간 가격의 합이 처음 가격의 1% 이상인지 확인
     decline_sum = coin_info.iloc[0]['Open'] - coin_info.iloc[-1]['Close']  # 내려간 가격의 합
-    decline_threshold = coin_info.iloc[0]['Open'] * 0.005
+    decline_threshold = coin_info.iloc[0]['Open'] * 0.008
     percentage = round((decline_sum / coin_info.iloc[0]['Open']) * 100, 2) # 내린 퍼센트
     
     return is_continuous_decline, decline_sum >= decline_threshold, coin_info.iloc[3]['Open'], percentage
@@ -386,7 +386,7 @@ def service_check_continuous_increase_and_sum_threshold(coin, interval):
     
     # 올라간 가격의 합이 처음 가격의 1% 이상인지 확인
     increase_sum = coin_info.iloc[-1]['Close'] - coin_info.iloc[0]['Open']  # 내려간 가격의 합
-    increase_threshold = coin_info.iloc[0]['Open'] * 0.005
+    increase_threshold = coin_info.iloc[0]['Open'] * 0.008
     percentage = round((increase_sum / coin_info.iloc[0]['Open']) * 100, 2)
     
     return is_continuous_increase, increase_sum >= increase_threshold, coin_info.iloc[3]['Open'], percentage
@@ -406,10 +406,9 @@ def does_down_tail_has_long_than_top(coin, interval):
         does_down_tail_has_long = True
         for i in range(1, 4):
         #   1,2,3을 순회함
-            # up_tail = coin_info.iloc[i]['High'] - coin_info.iloc[i]['Open']
+            up_tail = coin_info.iloc[i]['High'] - coin_info.iloc[i]['Open']
             down_tail = coin_info.iloc[i]['Close'] - coin_info.iloc[i]['Low']
-            # if up_tail >= down_tail: 
-            if  down_tail == 0: 
+            if up_tail >= down_tail: 
                 does_down_tail_has_long = False
         return does_down_tail_has_long
 
@@ -429,9 +428,8 @@ def does_top_tail_has_long_than_down(coin, interval):
         for i in range(1, 4):
         #   1,2,3을 순회함
             up_tail = coin_info.iloc[i]['High'] - coin_info.iloc[i]['Close']
-            # down_tail = coin_info.iloc[i]['Open'] - coin_info.iloc[i]['Low']
-            # if up_tail <= down_tail:
-            if up_tail == 0: 
+            down_tail = coin_info.iloc[i]['Open'] - coin_info.iloc[i]['Low']
+            if up_tail <= down_tail:
                 does_top_tail_has_long = False
         return does_top_tail_has_long
 
