@@ -1,14 +1,13 @@
-/** @type {import('tailwindcss').Config} */
-module.exports = {
-  purge: ['./pages/**/*.{js,ts,jsx,tsx}', './components/**/*.{js,ts,jsx,tsx}'],
-  content: [],
-  theme: {
-    extend: {},
-    screens: {
-      sm: '640px',
-      md: '1024px',
-      lg: '1280px',
-    },
+const config = {
+  content: ['./src/**/*.{js,ts,jsx,tsx,css}'],
+  corePlugins: {
+    preflight: false
   },
-  plugins: [],
-};
+  important: '#__next',
+  plugins: [require('tailwindcss-logical'), require('./src/@core/tailwind/plugin')],
+  theme: {
+    extend: {}
+  }
+}
+
+export default config

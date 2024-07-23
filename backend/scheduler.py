@@ -29,18 +29,18 @@ def start():
 			logger.error(traceback.format_exc())
 
 	# 시나리오1_구매
-	@scheduler.scheduled_job('interval', minutes=3, name='scenario1_schedule_buy', id='scenario1_schedule_buy')
-	def scenario1_schedule_buy():
-		try:
-			start_time = time.time()
-			logger.info('scenario1 =========================start')
-			scenario1_buy()
-			logger.info(f'scenario1 ========================end')
+	# @scheduler.scheduled_job('interval', minutes=3, name='scenario1_schedule_buy', id='scenario1_schedule_buy')
+	# def scenario1_schedule_buy():
+	# 	try:
+	# 		start_time = time.time()
+	# 		logger.info('scenario1 =========================start')
+	# 		scenario1_buy()
+	# 		logger.info(f'scenario1 ========================end')
 
-		except Exception as e:
-			pass
-			logger.error(e)
-			logger.error(traceback.format_exc())
+	# 	except Exception as e:
+	# 		pass
+	# 		logger.error(e)
+	# 		logger.error(traceback.format_exc())
 			
 	# 시나리오1_판매
 	@scheduler.scheduled_job('interval', minutes=3, name='scenario1_schedule_sell', id='scenario1_schedule_sell')
