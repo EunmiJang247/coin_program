@@ -10,14 +10,14 @@ services:
     ipc: host
     environment:
       - DB_HOST=localhost
-      - DB_NAME=boilerplatedb
+      - DB_NAME=coin
       - DB_USER=root
-      - DB_PW=dmsal369
+      - DB_PW=1234
       - EXPORT_HOST=localhost
       - EXPORT_PORT=89
       - TZ=Asia/Seoul
-    command: tail -F /dev/null
-    # command: python manage.py runserver 0.0.0.0:8000
+    # command: tail -F /dev/null
+    command: python manage.py runserver 0.0.0.0:8000
 
   frontend:
     build: ./frontend
