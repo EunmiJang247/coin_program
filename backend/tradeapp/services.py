@@ -5,18 +5,18 @@ import telegram
 import asyncio
 from binance.error import ClientError
 import pandas as pd
+import numpy as np
 
 '''
-텔레그램 메세지 보내는 함수: service_send_telegram_message
-현재 비트코인 가격 가져오는 함수: get_current_price
-내가가진 모든돈. 포지션에 들어있는 것은 제외. service_get_available_balance_usdt
-가지고 있는 선물 포지션 배열로 주는 함수: get_futures_wallet_balances
-USDT를 기준으로 거래되는 모든 암호화폐의 종류를 배열로 출력: service_get_tickers_usdt
-탑탠 코인: service_get_top_ten_coins
-캔들가격: service_klines
-volume_of_avg_and_previous: 100개의 거래량 평균과 현재 캔들의 거래량 반환
-이평선의 기울기가 14개, 21개 모두 양인지: service_is_current_status_rising
-내가 이 코인을 가지고있는지 반환 bool(True/False) service_check_if_ihave_this_coin
+    현재 비트코인 가격 가져오는 함수: get_current_price
+    내가가진 모든돈. 포지션에 들어있는 것은 제외. service_get_available_balance_usdt
+    가지고 있는 선물 포지션 배열로 주는 함수: get_futures_wallet_balances
+    USDT를 기준으로 거래되는 모든 암호화폐의 종류를 배열로 출력: service_get_tickers_usdt
+    탑탠 코인: service_get_top_ten_coins
+    캔들가격: service_klines
+    volume_of_avg_and_previous: 100개의 거래량 평균과 현재 캔들의 거래량 반환
+    이평선의 기울기가 14개, 21개 모두 양인지: service_is_current_status_rising
+    내가 이 코인을 가지고있는지 반환 bool(True/False) service_check_if_ihave_this_coin
 '''
 
 TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN')
@@ -34,7 +34,7 @@ def get_current_price(coin):
 
 def service_send_telegram_message(message):
 	'''
-	message에 담긴 변수를 텔레그램으로 보내줌
+	    message에 담긴 변수를 텔레그램으로 보내줌
 	'''
 	telegram_bot = telegram.Bot(TELEGRAM_BOT_TOKEN)
 	asyncio.run(telegram_bot.sendMessage(chat_id=TELEGRAM_CHAT_ID, text=message))
@@ -66,48 +66,48 @@ def set_margin_type(symbol, type):
       )
   
 def service_get_futures_wallet_balances():
-  '''
-  가지고 있는 선물 포지션들
-  결과 예시:
-  [{
-  'symbol': 'BTCUSDT', 
-  'positionAmt': '-0.002', 현재 보유한 자산의 양
-  'entryPrice': '66351.2', 포지션을 진입 또는 개장한 가격
-  'breakEvenPrice': '66318.0244', 손익분기점 가격으로, 수수료 및 기타 비용을 고려한 포지션의 수익 손실이 발생하지 않는 가격
-  'markPrice': '66351.10000000', 현재 시장 가격
-  'unRealizedProfit': '0.00020000', 실현되지 않은 이익
-  'liquidationPrice': '72670.46254980', 청산 가격
-  'leverage': '10', 레버리지 수준
-  'maxNotionalValue': '230000000', 최대 허용 가능한 명목 가치
-  'marginType': 'isolated', 마진 유형
-  'isolatedMargin': '13.22008880', 격리된 마진의 양
-  'isAutoAddMargin': 'false', 자동 마진 추가 설정
-  'positionSide': 'BOTH', 포지션의 방향
-  'notional': '-132.70220000', 포지션의 명목 가치
-  'isolatedWallet': '13.21988880', 격리된 지갑의 잔고
-  'updateTime': 1721440858926, 데이터가 업데이트된 시간
-  'isolated': True, 격리된 마진을 사용 중
-  'adlQuantile': 2 ADL(자동 청산 메커니즘)의 분위수
-  }]
-  '''
-  try:
-      resp = client.get_position_risk() # 보유 중인 각 포지션에 대한 정보를 반환
-      positions = []
-      for elem in resp:
-          if float(elem['positionAmt']) != 0:
-              positions.append(elem)
-      return positions
-  except ClientError as error:
-      print(
-          "9 Found error. status: {}, error code: {}, error message: {}".format(
-              error.status_code, error.error_code, error.error_message
-          )
-      )
+    '''
+        가지고 있는 선물 포지션들
+        결과 예시:
+        [{
+        'symbol': 'BTCUSDT', 
+        'positionAmt': '-0.002', 현재 보유한 자산의 양
+        'entryPrice': '66351.2', 포지션을 진입 또는 개장한 가격
+        'breakEvenPrice': '66318.0244', 손익분기점 가격으로, 수수료 및 기타 비용을 고려한 포지션의 수익 손실이 발생하지 않는 가격
+        'markPrice': '66351.10000000', 현재 시장 가격
+        'unRealizedProfit': '0.00020000', 실현되지 않은 이익
+        'liquidationPrice': '72670.46254980', 청산 가격
+        'leverage': '10', 레버리지 수준
+        'maxNotionalValue': '230000000', 최대 허용 가능한 명목 가치
+        'marginType': 'isolated', 마진 유형
+        'isolatedMargin': '13.22008880', 격리된 마진의 양
+        'isAutoAddMargin': 'false', 자동 마진 추가 설정
+        'positionSide': 'BOTH', 포지션의 방향
+        'notional': '-132.70220000', 포지션의 명목 가치
+        'isolatedWallet': '13.21988880', 격리된 지갑의 잔고
+        'updateTime': 1721440858926, 데이터가 업데이트된 시간
+        'isolated': True, 격리된 마진을 사용 중
+        'adlQuantile': 2 ADL(자동 청산 메커니즘)의 분위수
+        }, ]
+    '''
+    try:
+        resp = client.get_position_risk() # 보유 중인 각 포지션에 대한 정보를 반환
+        positions = []
+        for elem in resp:
+            if float(elem['positionAmt']) != 0:
+                positions.append(elem)
+        return positions
+    except ClientError as error:
+        print(
+            "9 Found error. status: {}, error code: {}, error message: {}".format(
+                error.status_code, error.error_code, error.error_message
+            )
+        )
 
 def service_get_balnace_usdt():
     '''
-    내가가진 모든돈. 포지션에 들어있는 것도 포함됨.
-    예시: 67.57379794
+        내가가진 모든돈. 포지션에 들어있는 것도 포함됨.
+        예시: 67.57379794
     '''
     try:
         response = client.balance(recvWindow=6000)
@@ -123,8 +123,8 @@ def service_get_balnace_usdt():
 
 def service_get_available_balance_usdt():
     '''
-    내가가진 모든돈. 포지션에 들어있는 것은 제외. 
-    예시: 54.58289113
+        내가가진 모든돈. 포지션에 들어있는 것은 제외. 
+        예시: 54.58289113
     '''
     try:
         response = client.balance(recvWindow=6000)
@@ -182,7 +182,7 @@ def service_klines(symbol, interval, limit):
             error.status_code, error.error_code, error.error_message))
         
 def get_price_precision(symbol):
-  # 암호화폐(symbol)의 가격 소수점 자릿수를 가져오는 함수
+  ''' 암호화폐(symbol)의 가격 소수점 자릿수를 가져오는 함수 '''
   resp = client.exchange_info()['symbols']
   for elem in resp:
       if elem['symbol'] == symbol:
@@ -190,7 +190,7 @@ def get_price_precision(symbol):
         
 
 def get_qty_precision(symbol):
-  # 암호화폐(symbol)의 개수 소수점 자릿수를 가져오는 함수
+  ''' 암호화폐(symbol)의 개수 소수점 자릿수를 가져오는 함수 '''
   resp = client.exchange_info()['symbols']
   for elem in resp:
       if elem['symbol'] == symbol:
@@ -457,3 +457,34 @@ def service_open_short_position(coin, usdt_amount, leverage, current_price, obje
         client.new_order(symbol=coin, side="BUY", type='TAKE_PROFIT_MARKET', quantity=qty, timeInForce='GTC', stopPrice=object_sell_price)
     except ClientError as e:
         print(f"주문 오류 발생: {e}")
+        
+def calculate_rsi(closes, period=14):
+	df = pd.Series(closes)
+	delta = df.diff()
+	up = delta.clip(lower=0)
+	down = -delta.clip(upper=0)
+
+	avg_gain = up.rolling(window=period).mean()
+	avg_loss = down.rolling(window=period).mean()
+
+	rs = avg_gain / avg_loss
+	rsi = 100 - (100 / (1 + rs))
+	return round(rsi.iloc[-1], 2)  # 마지막 RSI 값 리턴
+
+        
+def service_get_rsi(symbol, interval):
+    """
+    symbol과 interval을 입력받아 RSI 값을 계산해 반환
+    """
+    try:
+        klines_df = service_klines(symbol, interval, 100)  # DataFrame 반환됨
+
+        # 'Close' 컬럼에서 RSI 계산
+        closes = klines_df['Close'].values  # numpy array로 추출
+        rsi = calculate_rsi(closes)
+
+        return {'symbol': symbol, 'interval': interval, 'rsi': rsi}
+    
+    except Exception as e:
+        print(f"Error in service_get_rsi: {e}")
+        return {'error': str(e)}
