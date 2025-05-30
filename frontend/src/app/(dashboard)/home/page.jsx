@@ -1,3 +1,3 @@
 export default function Page() {
-  return <h1>Home page!여긴가..?</h1>
+  return <h1>안녕하시오</h1>
 }

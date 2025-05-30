@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 services:
   backend:
     build: ./backend
@@ -29,9 +29,11 @@ services:
     ipc: host
     environment:
       - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - FAST_REFRESH=true
       - TZ=Asia/Seoul
-    command: npm start
-    # command: yarn run dev
+    # command: npm start
+    command: npm run dev
 
   revers_proxy:
     build: ./nginx
