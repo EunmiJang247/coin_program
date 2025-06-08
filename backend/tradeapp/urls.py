@@ -17,4 +17,5 @@ urlpatterns = [
 	path('check_continuous_decline_and_sum_threshold', check_continuous_decline_and_sum_threshold),
 	path('check_continuous_increase_and_sum_threshold', check_continuous_increase_and_sum_threshold),
 	path('get_rsi', get_rsi),
+ 	path('get_macd', get_macd),
 ]

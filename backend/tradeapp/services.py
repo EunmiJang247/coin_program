@@ -488,3 +488,57 @@ def service_get_rsi(symbol, interval):
     except Exception as e:
         print(f"Error in service_get_rsi: {e}")
         return {'error': str(e)}
+
+
+def calculate_macd(close_prices, fast_period=12, slow_period=26, signal_period=9):
+    """
+    MACD 계산 함수
+    """
+    df = pd.Series(close_prices)
+    
+    # 지수이동평균
+    ema_fast = df.ewm(span=fast_period, adjust=False).mean()
+    ema_slow = df.ewm(span=slow_period, adjust=False).mean()
+
+    macd_line = ema_fast - ema_slow  # DIF
+    signal_line = macd_line.ewm(span=signal_period, adjust=False).mean()  # DEA
+    histogram = macd_line - signal_line
+
+    return macd_line, signal_line, histogram
+    
+def service_get_macd(symbol, interval):
+    """
+    MACD 분석을 수행하고 결과 해석 반환
+    """
+    df = service_klines(symbol, interval, 100)  # 최소 26개 이상 필요
+    close_prices = df['Close'].values
+
+    macd_line, signal_line, histogram = calculate_macd(close_prices)
+
+    # 최근 값만 추출
+    dif = round(macd_line.iloc[-1], 4)
+    dea = round(signal_line.iloc[-1], 4)
+    hist = round(histogram.iloc[-1], 4)
+
+    # 신호 해석
+    if dif > dea and dif > 0 and dea > 0:
+        signal = "BUY (상승 추세, 골든 크로스)"
+    elif dif < dea and dif < 0 and dea < 0:
+        signal = "SELL (하락 추세, 데드 크로스)"
+    elif dif > dea:
+        signal = "BUY (DIF > DEA)"
+    elif dif < dea:
+        signal = "SELL (DIF < DEA)"
+    elif abs(dif - dea) < 0.01:
+        signal = "HOLD (추세 전환 가능성)"
+    else:
+        signal = "중립"
+
+    return {
+        'symbol': symbol,
+        'interval': interval,
+        'DIF': dif,
+        'DEA': dea,
+        'Histogram': hist,
+        'signal': signal
+    }

@@ -254,6 +254,9 @@ def get_rsi(request):
 	'''
 		특정 코인의 RSI 값을 반환하는 API
 		기본 설정: symbol='BTCUSDT', interval='15m'
+  
+  		RSI 값이 70 이상 : 하락이 올 가능성이 큼. RSI가 75까지 올랐다가 70 아래로 내려가면, 매도 신호로 볼 수도 있음. 
+		RSI 값이 30 이하 : 상승이 올 가능성이 큼. RSI가 25까지 떨어졌다가 다시 30을 돌파하면, 매수 신호로 해석될 수 있음. 
 	'''
 	if request.method == 'GET':
 		try:
@@ -270,3 +273,20 @@ def get_rsi(request):
 			return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
 		finally:
 			close_old_connections()
+
+
+@api_view(['GET'])
+def get_macd(request):
+    try:
+        symbol = request.GET.get('symbol', 'BTCUSDT')
+        interval = request.GET.get('interval', '1h')
+
+        result = service_get_macd(symbol, interval)
+        return Response(result, status=HTTPStatus.OK)
+
+    except Exception as e:
+        logger.error(f'get_macd_error: {e}')
+        logger.error(traceback.format_exc())
+        return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    finally:
+        close_old_connections()
