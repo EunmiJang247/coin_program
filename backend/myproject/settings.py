@@ -181,11 +181,11 @@ LOG_FILE = os.path.join(log_path, 'backend.log')
 SECRET_KEY = config('SECRET_KEY')
 
 DEBUG = True  # 개발 중에는 True로 설정
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', f"{os.environ.get('EXPORT_HOST')}"]
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', f"{os.environ.get('EXPORT_HOST')}", '3.112.131.75']
 CSRF_TRUSTED_ORIGINS = [
     f"http://localhost:{os.environ.get('EXPORT_PORT')}", f"http://127.0.0.1:{os.environ.get('EXPORT_PORT')}", 
     f"http://0.0.0.0:{os.environ.get('EXPORT_PORT')}", f"http://{os.environ.get('EXPORT_HOST')}:{os.environ.get('EXPORT_PORT')}",
-    f"http://{os.environ.get('EXPORT_HOST')}:8282"
+    f"http://{os.environ.get('EXPORT_HOST')}:8282", 'http://3.112.131.75:89', 'http://3.112.131.75'
 ]
 
 INSTALLED_APPS = [
