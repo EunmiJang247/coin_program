@@ -5,6 +5,6 @@ class TradeappConfig(AppConfig):
 	default_auto_field = 'django.db.models.BigAutoField'
 	name = 'tradeapp'
 	def ready(self):
-		import scheduler
+		import tradeapp.scheduler as scheduler
 		if settings.DEBUG == False:
 				scheduler.start()

@@ -1,4 +1,3 @@
-import ta.trend
 from decouple import config
 from binance.um_futures import UMFutures
 import telegram
@@ -12,7 +11,7 @@ import numpy as np
     내가가진 모든돈. 포지션에 들어있는 것은 제외. service_get_available_balance_usdt
     가지고 있는 선물 포지션 배열로 주는 함수: get_futures_wallet_balances
     USDT를 기준으로 거래되는 모든 암호화폐의 종류를 배열로 출력: service_get_tickers_usdt
-    탑탠 코인: service_get_top_ten_coins
+    탑탠 코인: get_my_favorite_coins_from_service
     캔들가격: service_klines
     volume_of_avg_and_previous: 100개의 거래량 평균과 현재 캔들의 거래량 반환
     이평선의 기울기가 14개, 21개 모두 양인지: service_is_current_status_rising
@@ -153,7 +152,7 @@ def service_get_tickers_usdt():
     return tickers
 
 
-def service_get_top_ten_coins():
+def get_my_favorite_coins_from_service():
     tickers = ['BTCUSDT', 'BNBUSDT', 'ETHUSDT', 'BCHUSDT', 'XRPUSDT', 'EOSUSDT', 'LTCUSDT', 'TRXUSDT', 'ADAUSDT', 'ONTUSDT', 'IOTAUSDT', 'BATUSDT', 'XLMUSDT', 'XMRUSDT', 'ZECUSDT', 'ATOMUSDT', 'VETUSDT']
     # tickers = ['BTCUSDT']
     return tickers
@@ -215,21 +214,22 @@ def service_check_if_ihave_this_coin(coin):
           )
       )
 
-
 def service_volume_of_avg_and_previous(symbol, interval):
   '''
   100개의 거래량 평균과 현재 캔들의 거래량 반환
 
   Parameters:
     symbol (str): 거래 쌍 심볼
+    interval (str): 시간 간격
 
   Returns:
-    tuple: (직전 캔들의 거래량, 평균 거래량)
-    만약 데이터를 가져오는 과정에서 오류가 발생하면 (None, None)을 반환
-
-  반환 예시:
-  평균, 현재 순서.
-  [573.36,907.1138383838385]
+    dict: 거래량 분석 결과
+    {
+      "average_volume": 1234.567,      // 과거 100개 캔들의 평균 거래량
+      "current_volume": 2468.123,      // 현재(최신) 캔들의 거래량
+      "volume_ratio": 2.0,             // 현재/평균 비율
+      "is_high_volume": true           // 평균보다 높은 거래량인지 여부
+    }
   '''
   try:
     # 최근 100개의 Kline 데이터 가져오기
@@ -241,17 +241,37 @@ def service_volume_of_avg_and_previous(symbol, interval):
     resp = resp.astype(float)
 
     # 현재 캔들의 거래량 구하기 (가장 최근 데이터)
-    previous_volume = resp.iloc[-2]['Volume']
+    current_volume = resp.iloc[-1]['Volume']
+    # 과거 99개 캔들의 평균 거래량 (현재 캔들 제외)
     avg_volume = resp.iloc[:-1]['Volume'].mean()
+    
+    # 거래량 비율 계산
+    volume_ratio = round(current_volume / avg_volume, 2) if avg_volume > 0 else 0
+    
+    # 평균보다 높은 거래량인지 확인
+    is_high_volume = current_volume > avg_volume
 
-    # 직전 캔들의 거래량과 평균 거래량을 반환
-    return avg_volume, previous_volume
+    return {
+        "average_volume": round(avg_volume, 3),
+        "current_volume": round(current_volume, 3),
+        "volume_ratio": volume_ratio,
+        "is_high_volume": is_high_volume
+    }
+    
   except ClientError as error:
     print("Error: {}".format(error))
-
+    return {
+        "error": str(error),
+        "average_volume": None,
+        "current_volume": None,
+        "volume_ratio": None,
+        "is_high_volume": None
+    }
 
 def _calculate_slope(data, period):
-  # 기울기를 일반적인 방식으로 계산하는 함수
+  '''
+    기울기를 일반적인 방식으로 계산하는 함수
+  '''
   first_value = data.iloc[-period]
   last_value = data.iloc[-1]
 
@@ -318,84 +338,6 @@ def service_is_current_status_declining(coin, interval):
       return (False, ma_21_slope, ma_14_slope, ma_7_slope)
 
 
-def service_check_continuous_decline_and_sum_threshold(coin, interval):
-  '''
-  상승 추세에서 최근 4캔들 중에서 가격이 연속해서 내려갔고, 내려간 가격의 합이 처음 가격의 1% 이상인지 확인하는 함수
-  
-  Parameters:
-  코인, 인터벌
-  
-  Returns:
-  bool: 최근 4개 캔들 중에서 가격이 연속해서 내려갔고, 내려간 가격의 합이 처음 가격의 1% 이상이면 True, 아니면 False, 목표가(이가격에 팔겠다), 내려간 비율
-  '''
-  try:
-    # 최근 4개 캔들의 Close 가격 데이터를 가져옴
-    coin_info=service_klines(coin, interval, 5)
-    # print(coin_info)
-    # print(coin_info.iloc[0]['Open']) # 1시간 전
-    # print(coin_info.iloc[1]) # 45분전
-    # print(coin_info.iloc[2]) # 30분전
-    # print(coin_info.iloc[3]) # 15분전
-    # print(coin_info.iloc[4]) # 현재 
-    # print(coin_info.iloc[-1]) # 현재
-
-    is_continuous_decline = True
-    for i in range(1, 4):
-    #   1,2,3을 순회함
-      if coin_info.iloc[i]['Open'] <= coin_info.iloc[i]['Close']:  # 이전 캔들보다 가격이 같거나 높으면
-        is_continuous_decline = False
-    
-    # 내려간 가격의 합이 처음 가격의 1% 이상인지 확인
-    decline_sum = coin_info.iloc[0]['Open'] - coin_info.iloc[-1]['Close']  # 내려간 가격의 합
-    decline_threshold = coin_info.iloc[0]['Open'] * 0.008
-    percentage = round((decline_sum / coin_info.iloc[0]['Open']) * 100, 2) # 내린 퍼센트
-    
-    return is_continuous_decline, decline_sum >= decline_threshold, coin_info.iloc[3]['Open'], percentage
-  
-  except Exception as e:
-    print(f"Error in check_continuous_decline_and_sum_threshold: {e}")
-    return False
-
-
-def service_check_continuous_increase_and_sum_threshold(coin, interval):
-  '''
-  하락추세에서 최근 4캔들 중에서 가격이 연속해서 올라갔고, 올라간 가격의 합이 처음 가격의 1% 이상인지 확인하는 함수
-  
-  Parameters:
-  coin_info (DataFrame): 코인 정보가 담긴 데이터프레임. 최소 4개의 캔들 데이터를 포함해야 함.
-  
-  Returns:
-  bool: 최근 4개 캔들 중에서 가격이 연속해서 올라갔고, 올라간 가격의 합이 처음 가격의 1% 이상이면 True, 아니면 False, 처음값, 마지막값, 올라간 비율
-  '''
-  try:
-    coin_info = service_klines(coin, interval, 5)
-    # print(coin_info)
-    # print(coin_info.iloc[0]['Open']) # 1시간 전
-    # print(coin_info.iloc[1]) # 45분전
-    # print(coin_info.iloc[2]) # 30분전
-    # print(coin_info.iloc[3]) # 15분전
-    # print(coin_info.iloc[4]) # 현재 
-    # print(coin_info.iloc[-1]) # 현재
-    
-    is_continuous_increase = True
-    for i in range(1, 4):
-    #   1,2,3을 순회함
-      if coin_info.iloc[i]['Open'] >= coin_info.iloc[i]['Close']: 
-        is_continuous_increase = False
-        # print(is_continuous_increase)
-    
-    # 올라간 가격의 합이 처음 가격의 1% 이상인지 확인
-    increase_sum = coin_info.iloc[-1]['Close'] - coin_info.iloc[0]['Open']  # 내려간 가격의 합
-    increase_threshold = coin_info.iloc[0]['Open'] * 0.008
-    percentage = round((increase_sum / coin_info.iloc[0]['Open']) * 100, 2)
-    
-    return is_continuous_increase, increase_sum >= increase_threshold, coin_info.iloc[3]['Open'], percentage
-  
-  except Exception as e:
-    print(f"Error in check_continuous_increase_and_sum_threshold: {e}")
-    return False
-
-
 def does_down_tail_has_long_than_top(coin, interval):
     '''
     그래프의 3개 이전 캔들 모두 위꼬리보다 아래꼬리가 길었는지(올라갈때를 판별하는 함수)
@@ -436,6 +378,111 @@ def does_top_tail_has_long_than_down(coin, interval):
     except Exception as e:
         print(f"Error in check_continuous_increase_and_sum_threshold: {e}")
         return False
+        
+def calculate_rsi(closes, period=14):
+    """
+    바이낸스와 동일한 방식의 RSI 계산 (Wilder's Smoothing)
+    """
+    if len(closes) < period + 1:
+        return None
+    
+    df = pd.Series(closes)
+    delta = df.diff().dropna()  # NaN 값 제거
+    
+    # 상승분과 하락분 분리
+    up = delta.clip(lower=0)
+    down = -delta.clip(upper=0)
+    
+    # 첫 번째 기간의 평균 계산
+    avg_gain = up.iloc[:period].mean()
+    avg_loss = down.iloc[:period].mean()
+    
+    # 0으로 나누기 방지
+    if avg_loss == 0:
+        return 100.0
+    
+    # Wilder's smoothing 적용
+    alpha = 1.0 / period
+    
+    gains = [avg_gain]
+    losses = [avg_loss]
+    
+    for i in range(period, len(up)):
+        gain = alpha * up.iloc[i] + (1 - alpha) * gains[-1]
+        loss = alpha * down.iloc[i] + (1 - alpha) * losses[-1]
+        gains.append(gain)
+        losses.append(loss)
+    
+    # RSI 계산
+    if losses[-1] == 0:
+        return 100.0
+    
+    rs = gains[-1] / losses[-1]
+    rsi = 100 - (100 / (1 + rs))
+    
+    # NaN 체크
+    if pd.isna(rsi):
+        return None
+        
+    return round(float(rsi), 2)
+
+        
+def service_get_rsi(symbol, interval):
+    """
+    symbol과 interval을 입력받아 RSI 값을 계산해 반환
+    """
+    try:
+        # 더 많은 데이터를 가져와서 정확도 향상
+        klines_df = service_klines(symbol, interval, 100)  
+        
+        if klines_df is None or len(klines_df) < 15:
+            return {
+                'symbol': symbol, 
+                'interval': interval, 
+                'rsi': None,
+                'period': 14,
+                'error': 'Insufficient data'
+            }
+        
+        closes = klines_df['Close'].values.astype(float)
+        
+        # NaN 또는 무한대 값 확인
+        if np.any(pd.isna(closes)) or np.any(np.isinf(closes)):
+            return {
+                'symbol': symbol, 
+                'interval': interval, 
+                'rsi': None,
+                'period': 14,
+                'error': 'Invalid price data'
+            }
+        
+        rsi = calculate_rsi(closes, period=14)
+        
+        if rsi is None:
+            return {
+                'symbol': symbol, 
+                'interval': interval, 
+                'rsi': None,
+                'period': 14,
+                'error': 'RSI calculation failed'
+            }
+
+        return {
+            'symbol': symbol, 
+            'interval': interval, 
+            'rsi': rsi,
+            'period': 14
+        }
+    
+    except Exception as e:
+        print(f"Error in service_get_rsi: {e}")
+        return {
+            'symbol': symbol, 
+            'interval': interval, 
+            'rsi': None,
+            'period': 14,
+            'error': str(e)
+        }
 
 def service_open_long_position(coin, usdt_amount, leverage, current_price, object_sell_price):
     qty_precision = get_qty_precision(coin)
@@ -457,88 +504,3 @@ def service_open_short_position(coin, usdt_amount, leverage, current_price, obje
         client.new_order(symbol=coin, side="BUY", type='TAKE_PROFIT_MARKET', quantity=qty, timeInForce='GTC', stopPrice=object_sell_price)
     except ClientError as e:
         print(f"주문 오류 발생: {e}")
-        
-def calculate_rsi(closes, period=14):
-	df = pd.Series(closes)
-	delta = df.diff()
-	up = delta.clip(lower=0)
-	down = -delta.clip(upper=0)
-
-	avg_gain = up.rolling(window=period).mean()
-	avg_loss = down.rolling(window=period).mean()
-
-	rs = avg_gain / avg_loss
-	rsi = 100 - (100 / (1 + rs))
-	return round(rsi.iloc[-1], 2)  # 마지막 RSI 값 리턴
-
-        
-def service_get_rsi(symbol, interval):
-    """
-    symbol과 interval을 입력받아 RSI 값을 계산해 반환
-    """
-    try:
-        klines_df = service_klines(symbol, interval, 100)  # DataFrame 반환됨
-
-        # 'Close' 컬럼에서 RSI 계산
-        closes = klines_df['Close'].values  # numpy array로 추출
-        rsi = calculate_rsi(closes)
-
-        return {'symbol': symbol, 'interval': interval, 'rsi': rsi}
-    
-    except Exception as e:
-        print(f"Error in service_get_rsi: {e}")
-        return {'error': str(e)}
-
-
-def calculate_macd(close_prices, fast_period=12, slow_period=26, signal_period=9):
-    """
-    MACD 계산 함수
-    """
-    df = pd.Series(close_prices)
-    
-    # 지수이동평균
-    ema_fast = df.ewm(span=fast_period, adjust=False).mean()
-    ema_slow = df.ewm(span=slow_period, adjust=False).mean()
-
-    macd_line = ema_fast - ema_slow  # DIF
-    signal_line = macd_line.ewm(span=signal_period, adjust=False).mean()  # DEA
-    histogram = macd_line - signal_line
-
-    return macd_line, signal_line, histogram
-    
-def service_get_macd(symbol, interval):
-    """
-    MACD 분석을 수행하고 결과 해석 반환
-    """
-    df = service_klines(symbol, interval, 100)  # 최소 26개 이상 필요
-    close_prices = df['Close'].values
-
-    macd_line, signal_line, histogram = calculate_macd(close_prices)
-
-    # 최근 값만 추출
-    dif = round(macd_line.iloc[-1], 4)
-    dea = round(signal_line.iloc[-1], 4)
-    hist = round(histogram.iloc[-1], 4)
-
-    # 신호 해석
-    if dif > dea and dif > 0 and dea > 0:
-        signal = "BUY (상승 추세, 골든 크로스)"
-    elif dif < dea and dif < 0 and dea < 0:
-        signal = "SELL (하락 추세, 데드 크로스)"
-    elif dif > dea:
-        signal = "BUY (DIF > DEA)"
-    elif dif < dea:
-        signal = "SELL (DIF < DEA)"
-    elif abs(dif - dea) < 0.01:
-        signal = "HOLD (추세 전환 가능성)"
-    else:
-        signal = "중립"
-
-    return {
-        'symbol': symbol,
-        'interval': interval,
-        'DIF': dif,
-        'DEA': dea,
-        'Histogram': hist,
-        'signal': signal
-    }

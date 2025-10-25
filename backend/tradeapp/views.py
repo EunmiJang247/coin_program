@@ -1,14 +1,9 @@
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import logging
 import traceback
 from http import HTTPStatus
-from django.shortcuts import render
-from django.db import DatabaseError, transaction, close_old_connections
-from django.shortcuts import get_object_or_404
-import json
-from django.db.models import Q
-
+from django.db import close_old_connections
 from tradeapp.services import *
 
 logger = logging.getLogger('tradeapp.views')
@@ -85,6 +80,7 @@ def get_available_balance_usdt(request):
 
 @api_view(['GET'])
 def get_tickers_usdt(request):
+    # USDT 마켓의 모든 코인 티커 정보를 반환하는 API
 	if request.method == 'GET':
 		try:
 			result = service_get_tickers_usdt()
@@ -100,10 +96,10 @@ def get_tickers_usdt(request):
 
 
 @api_view(['GET'])
-def get_top_ten_coins(request):
+def get_my_favorite_coins(request):
 	if request.method == 'GET':
 		try:
-			result = service_get_top_ten_coins()
+			result = get_my_favorite_coins_from_service()
 			print(result)
 			return Response(result, status=HTTPStatus.OK)
 		except Exception as e:
@@ -174,7 +170,6 @@ def is_current_status_rising(request):
 			symbol='BNBUSDT' # 이거 설정해야함!
 			interval='1h'
 			result = service_is_current_status_rising(symbol, interval)
-			print(result)
 			return Response(result, status=HTTPStatus.OK)
 		except Exception as e:
 			logger.error(f'tsend_telegram_message_get_error : {e}')
@@ -191,7 +186,6 @@ def is_current_status_declining(request):
 			symbol='BNBUSDT' # 이거 설정해야함!
 			interval='1h'
 			result = service_is_current_status_declining(symbol, interval)
-			print(result)
 			return Response(result, status=HTTPStatus.OK)
 		except Exception as e:
 			logger.error(f'tsend_telegram_message_get_error : {e}')
@@ -199,55 +193,7 @@ def is_current_status_declining(request):
 			return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
 		finally:
 			close_old_connections()
-
-@api_view(['GET'])
-def check_continuous_decline_and_sum_threshold(request):
-	if request.method == 'GET':
-		try:
-			symbol='XRPUSDT' # 이거 설정해야함!
-			interval='15m'
-			result = service_check_continuous_decline_and_sum_threshold(symbol, interval)
-			print(result)
-			return Response(result, status=HTTPStatus.OK)
-		except Exception as e:
-			logger.error(f'tsend_telegram_message_get_error : {e}')
-			logger.error(traceback.format_exc())
-			return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
-		finally:
-			close_old_connections()
-
-@api_view(['GET'])
-def check_continuous_increase_and_sum_threshold(request):
-	if request.method == 'GET':
-		try:
-			symbol='XTZUSDT' # 이거 설정해야함!
-			interval='15m'
-			result = service_check_continuous_increase_and_sum_threshold(symbol, interval)
-			print(result)
-			return Response(result, status=HTTPStatus.OK)
-		except Exception as e:
-			logger.error(f'tsend_telegram_message_get_error : {e}')
-			logger.error(traceback.format_exc())
-			return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
-		finally:
-			close_old_connections()
-
-# @api_view(['GET'])
-# def open_order_long(request):
-# 	if request.method == 'GET':
-# 		try:
-# 			symbol='BNBUSDT' # 이거 설정해야함!
-# 			qty=12
-# 			object_sell_price=12222
-# 			result = service_open_order_long(symbol, qty, object_sell_price)
-# 			print(result)
-# 			return Response(result, status=HTTPStatus.OK)
-# 		except Exception as e:
-# 			logger.error(f'tsend_telegram_message_get_error : {e}')
-# 			logger.error(traceback.format_exc())
-# 			return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
-# 		finally:
-# 			close_old_connections()
+   
 
 @api_view(['GET'])
 def get_rsi(request):
@@ -264,7 +210,6 @@ def get_rsi(request):
 			interval = request.GET.get('interval', '15m')  # 기본값 15분
 
 			result = service_get_rsi(symbol, interval)
-			print(result)
 			return Response(result, status=HTTPStatus.OK)
 
 		except Exception as e:
@@ -273,20 +218,3 @@ def get_rsi(request):
 			return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
 		finally:
 			close_old_connections()
-
-
-@api_view(['GET'])
-def get_macd(request):
-    try:
-        symbol = request.GET.get('symbol', 'BTCUSDT')
-        interval = request.GET.get('interval', '1h')
-
-        result = service_get_macd(symbol, interval)
-        return Response(result, status=HTTPStatus.OK)
-
-    except Exception as e:
-        logger.error(f'get_macd_error: {e}')
-        logger.error(traceback.format_exc())
-        return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
-    finally:
-        close_old_connections()
