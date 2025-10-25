@@ -8,7 +8,7 @@ logger = logging.getLogger('scheduler')
 def start():
 	scheduler = BackgroundScheduler(timezone='Asia/Seoul')
    
-	@scheduler.scheduled_job('interval', seconds=10, name='rsi_check', id='rsi_check')
+	@scheduler.scheduled_job('interval', seconds=60, name='rsi_check', id='rsi_check')
 	def check_favorite_rsi():
 		try:
 			print('scheduler test', datetime.datetime.now())
@@ -115,5 +115,15 @@ def start():
 				
 		except Exception as e:
 			logger.error(f'RSI check error: {e}')
+
+	# 새로 추가: 1시간마다 생존 확인 메시지
+	@scheduler.scheduled_job('interval', hours=1, name='heartbeat', id='heartbeat')
+	def send_heartbeat():
+		try:
+			current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+			message = f"💚 살아있어요! ({current_time})"
+			service_send_telegram_message(message)
+		except Exception as e:
+			logger.error(f'Heartbeat error: {e}')
 
 	scheduler.start()
