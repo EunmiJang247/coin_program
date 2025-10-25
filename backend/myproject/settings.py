@@ -166,7 +166,8 @@
 # }
 
 
-# 아래 버전은 데이터베이스 관련 없앰from pathlib import Path
+# 아래 버전은 데이터베이스 관련 없앰
+from pathlib import Path  # 주석 해제
 import os
 from decouple import config
 
