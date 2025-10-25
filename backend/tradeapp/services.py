@@ -153,8 +153,20 @@ def service_get_tickers_usdt():
 
 
 def get_my_favorite_coins_from_service():
-    tickers = ['BTCUSDT', 'BNBUSDT', 'ETHUSDT', 'BCHUSDT', 'XRPUSDT', 'EOSUSDT', 'LTCUSDT', 'TRXUSDT', 'ADAUSDT', 'ONTUSDT', 'IOTAUSDT', 'BATUSDT', 'XLMUSDT', 'XMRUSDT', 'ZECUSDT', 'ATOMUSDT', 'VETUSDT']
-    # tickers = ['BTCUSDT']
+    tickers = [
+    "BTCUSDT",  # Bitcoin  
+    "ETHUSDT",  # Ethereum  
+    "BNBUSDT",  # BNB  
+    "XRPUSDT",  # XRP  
+    "ADAUSDT",  # Cardano  
+    "LTCUSDT",  # Litecoin  
+    "BCHUSDT",  # Bitcoin Cash  
+    "XLMUSDT",  # Stellar  
+    "ZECUSDT",  # Zcash  
+    "ATOMUSDT", # Cosmos  
+    "VETUSDT",  # VeChain  
+    "TRXUSDT",  # TRON  
+    ]
     return tickers
 
 
@@ -504,3 +516,26 @@ def service_open_short_position(coin, usdt_amount, leverage, current_price, obje
         client.new_order(symbol=coin, side="BUY", type='TAKE_PROFIT_MARKET', quantity=qty, timeInForce='GTC', stopPrice=object_sell_price)
     except ClientError as e:
         print(f"주문 오류 발생: {e}")
+        
+def service_get_all_favorite_coins_rsi(interval='15m'):
+    """
+    favorite 코인들의 RSI를 모두 계산해서 반환
+    """
+    favorite_coins = get_my_favorite_coins_from_service()
+    results = []
+    
+    for coin in favorite_coins:
+        try:
+            rsi_data = service_get_rsi(coin, interval)
+            results.append(rsi_data)
+        except Exception as e:
+            print(f"Error getting RSI for {coin}: {e}")
+            results.append({
+                'symbol': coin,
+                'interval': interval,
+                'rsi': None,
+                'period': 14,
+                'error': str(e)
+            })
+    
+    return results

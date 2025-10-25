@@ -6,5 +6,4 @@ class TradeappConfig(AppConfig):
 	name = 'tradeapp'
 	def ready(self):
 		import tradeapp.scheduler as scheduler
-		if settings.DEBUG == False:
-				scheduler.start()
+		scheduler.start()

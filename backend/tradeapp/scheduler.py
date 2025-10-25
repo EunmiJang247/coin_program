@@ -1,10 +1,8 @@
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.background import BackgroundScheduler  # schedulers → apscheduler
+from tradeapp.services import service_get_all_favorite_coins_rsi, service_send_telegram_message  # backend.tradeapp → tradeapp
 from django_apscheduler.jobstores import register_events, DjangoJobStore
 from apscheduler.triggers.cron import CronTrigger
 import logging
-import time
-import traceback
-from tradeapp.views_scheduler import check_current_price, scenario1_buy, scenario1_sell
 import datetime
 
 logger = logging.getLogger('scheduler')
@@ -14,46 +12,41 @@ def start():
 	scheduler.add_jobstore(DjangoJobStore(), 'djangojobstore')
 	register_events(scheduler)
 
-	# # 스케줄러 테스트
-	# @scheduler.scheduled_job('interval', minutes=10, name='notification_report_create', id='notification_report_create')
-	# def notification_report_create():
-	# 	try:
-	# 		start_time = time.time()
-	# 		logger.info('check_weather_state =========================start')
-	# 		check_current_price()
-	# 		logger.info(f'check_weather_state ========================end')
-
-	# 	except Exception as e:
-	# 		pass
-	# 		logger.error(e)
-	# 		logger.error(traceback.format_exc())
-
-	# 시나리오1_구매
-	# @scheduler.scheduled_job('interval', minutes=3, name='scenario1_schedule_buy', id='scenario1_schedule_buy')
-	# def scenario1_schedule_buy():
-	# 	try:
-	# 		start_time = time.time()
-	# 		logger.info('scenario1 =========================start')
-	# 		scenario1_buy()
-	# 		logger.info(f'scenario1 ========================end')
-
-	# 	except Exception as e:
-	# 		pass
-	# 		logger.error(e)
-	# 		logger.error(traceback.format_exc())
+	# 스케줄러 테스트
+	@scheduler.scheduled_job('interval', seconds=10, name='test', id='test')
+	def test():
+		try:
+			print('scheduler test', datetime.datetime.now())
+		except Exception as e:
+			pass
+			logger.error(e)
+   
+	@scheduler.scheduled_job('interval', seconds=10, name='rsi_check', id='rsi_check')
+	def check_favorite_rsi():
+		try:
+			results = service_get_all_favorite_coins_rsi('15m')
 			
-	# 시나리오1_판매
-	# @scheduler.scheduled_job('interval', minutes=3, name='scenario1_schedule_sell', id='scenario1_schedule_sell')
-	# def scenario1_schedule_sell():
-	# 	try:
-	# 		start_time = time.time()
-	# 		logger.info('scenario1 =========================start')
-	# 		scenario1_sell()
-	# 		logger.info(f'scenario1 ========================end')
+			# 과매수/과매도 상황 찾기
+			overbought = [r for r in results if r.get('rsi') and r['rsi'] > 70]
+			oversold = [r for r in results if r.get('rsi') and r['rsi'] < 30]
+			
+			if overbought:
+				print(f"🔴 과매수: {[coin['symbol'] + ':' + str(coin['rsi']) for coin in overbought]}")
+			
+			if oversold:
+				oversold_list = []
+				for coin in oversold:
+					oversold_list.append(f"{coin['symbol']}: {coin['rsi']}")
+				
+				message = f"🟢 과매도 신호 감지!\n" + "\n".join(oversold_list)
+				print(f"🟢 과매도: {oversold_list}")
+				
+				try:
+					service_send_telegram_message(message)
+				except Exception as telegram_error:
+					logger.error(f'텔레그램 전송 실패 (과매도): {telegram_error}')
+				
+		except Exception as e:
+			logger.error(f'RSI check error: {e}')
 
-	# 	except Exception as e:
-	# 		pass
-	# 		logger.error(e)
-	# 		logger.error(traceback.format_exc())
-
-	# scheduler.start()
+	scheduler.start()
