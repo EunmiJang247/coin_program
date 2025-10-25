@@ -27,11 +27,21 @@ def start():
 			results = service_get_all_favorite_coins_rsi('15m')
 			
 			# 과매수/과매도 상황 찾기
-			overbought = [r for r in results if r.get('rsi') and r['rsi'] > 70]
-			oversold = [r for r in results if r.get('rsi') and r['rsi'] < 30]
+			overbought = [r for r in results if r.get('rsi') and r['rsi'] > 90]
+			oversold = [r for r in results if r.get('rsi') and r['rsi'] < 29]
 			
 			if overbought:
-				print(f"🔴 과매수: {[coin['symbol'] + ':' + str(coin['rsi']) for coin in overbought]}")
+				overbought_list = []
+				for coin in overbought:
+					overbought_list.append(f"{coin['symbol']}: {coin['rsi']}")
+				
+				message = f"🔴 과매수 신호 감지!\n" + "\n".join(overbought_list)
+				print(f"🔴 과매수: {overbought_list}")
+				
+				try:
+					service_send_telegram_message(message)
+				except Exception as telegram_error:
+					logger.error(f'텔레그램 전송 실패 (과매수): {telegram_error}')
 			
 			if oversold:
 				oversold_list = []
