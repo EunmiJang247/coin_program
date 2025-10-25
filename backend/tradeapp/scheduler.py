@@ -1,7 +1,5 @@
 from apscheduler.schedulers.background import BackgroundScheduler  # schedulers → apscheduler
-from tradeapp.services import service_get_all_favorite_coins_rsi, service_klines, service_open_long_position, service_open_short_position, service_send_telegram_message  # backend.tradeapp → tradeapp
-from django_apscheduler.jobstores import register_events, DjangoJobStore
-from apscheduler.triggers.cron import CronTrigger
+from tradeapp.services import service_get_all_favorite_coins_rsi, service_klines, service_open_long_position, service_open_short_position, service_send_telegram_message
 import logging
 import datetime
 
@@ -9,8 +7,6 @@ logger = logging.getLogger('scheduler')
 
 def start():
 	scheduler = BackgroundScheduler(timezone='Asia/Seoul')
-	scheduler.add_jobstore(DjangoJobStore(), 'djangojobstore')
-	register_events(scheduler)
    
 	@scheduler.scheduled_job('interval', seconds=10, name='rsi_check', id='rsi_check')
 	def check_favorite_rsi():
