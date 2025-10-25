@@ -60,9 +60,17 @@
 # 	},
 # ]
 
-# WSGI_APPLICATION = 'myproject.wsgi.application'
+WSGI_APPLICATION = 'myproject.wsgi.application'
 
-# AUTH_PASSWORD_VALIDATORS = [
+# REST Framework 설정 추가 (인증 없이 사용)
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_PERMISSION_CLASSES': [],
+    'UNAUTHENTICATED_USER': None,
+    'UNAUTHENTICATED_TOKEN': None,
+}
+
+AUTH_PASSWORD_VALIDATORS = []
 # 	{
 # 		'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
 # 	},
