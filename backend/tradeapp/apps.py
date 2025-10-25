@@ -1,10 +1,12 @@
 from django.apps import AppConfig
-from django.conf import settings
 
 class TradeappConfig(AppConfig):
 	default_auto_field = 'django.db.models.BigAutoField'
 	name = 'tradeapp'
+	
 	def ready(self):
-		import tradeapp.scheduler as scheduler
-		if not scheduler.running:
+		try:
+			import tradeapp.scheduler as scheduler
 			scheduler.start()
+		except Exception as e:
+			print(f"Scheduler start error: {e}")
