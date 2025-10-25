@@ -7,7 +7,6 @@ import pandas as pd
 import numpy as np
 
 '''
-    현재 비트코인 가격 가져오는 함수: get_current_price
     내가가진 모든돈. 포지션에 들어있는 것은 제외. service_get_available_balance_usdt
     가지고 있는 선물 포지션 배열로 주는 함수: get_futures_wallet_balances
     USDT를 기준으로 거래되는 모든 암호화폐의 종류를 배열로 출력: service_get_tickers_usdt
@@ -23,13 +22,6 @@ TELEGRAM_CHAT_ID = config('TELEGRAM_CHAT_ID')
 API = config('API')
 SECRET = config('SECRET')
 client = UMFutures(key = API, secret = SECRET)
-
-def say_hi():
-	print('hi')
-
-def get_current_price(coin):
-    price = float(client.ticker_price(coin)['price'])
-    return price
 
 def service_send_telegram_message(message):
 	'''
@@ -495,27 +487,6 @@ def service_get_rsi(symbol, interval):
             'period': 14,
             'error': str(e)
         }
-
-def service_open_long_position(coin, usdt_amount, leverage, current_price, object_sell_price):
-    qty_precision = get_qty_precision(coin)
-    qty = round(float(round(usdt_amount / current_price, 6)) * leverage, qty_precision)
-
-    try:
-        client.new_order(symbol=coin, side="BUY", type='LIMIT', quantity=qty, timeInForce='GTC', price=current_price)
-        client.new_order(symbol=coin, side="SELL", type='TAKE_PROFIT_MARKET', quantity=qty, timeInForce='GTC', stopPrice=object_sell_price)
-    except ClientError as e:
-        print(f"주문 오류 발생: {e}")
-
-
-def service_open_short_position(coin, usdt_amount, leverage, current_price, object_sell_price):
-    qty_precision = get_qty_precision(coin)
-    qty = round(float(round(usdt_amount / current_price, 6)) * leverage, qty_precision)
-
-    try:
-        client.new_order(symbol=coin, side="SELL", type='LIMIT', quantity=qty, timeInForce='GTC', price=current_price)
-        client.new_order(symbol=coin, side="BUY", type='TAKE_PROFIT_MARKET', quantity=qty, timeInForce='GTC', stopPrice=object_sell_price)
-    except ClientError as e:
-        print(f"주문 오류 발생: {e}")
         
 def service_get_all_favorite_coins_rsi(interval='15m'):
     """
@@ -539,3 +510,103 @@ def service_get_all_favorite_coins_rsi(interval='15m'):
             })
     
     return results
+
+def service_open_long_position(coin, usdt_amount, leverage, current_price, object_sell_price):
+    # 레버리지와 마진 타입 설정 추가
+    set_leverage(coin, leverage)
+    set_margin_type(coin, 'ISOLATED')  # 또는 'CROSS'
+    
+    qty_precision = get_qty_precision(coin)
+    qty = round(float(round(usdt_amount / current_price, 6)) * leverage, qty_precision)
+
+    try:
+        # 매수 주문 (롱 포지션 진입)
+        buy_order = client.new_order(
+            symbol=coin, 
+            side="BUY", 
+            type='LIMIT', 
+            quantity=qty, 
+            timeInForce='GTC', 
+            price=current_price
+        )
+        print(f"✅ 롱 포지션 진입: {coin} {qty}개 @ {current_price}")
+        
+        # 익절 주문 (Take Profit)
+        tp_order = client.new_order(
+            symbol=coin, 
+            side="SELL", 
+            type='TAKE_PROFIT_MARKET', 
+            quantity=qty, 
+            timeInForce='GTC', 
+            stopPrice=object_sell_price
+        )
+        print(f"✅ 익절 주문 설정: {object_sell_price}")
+        
+        return {
+            'status': 'success',
+            'buy_order': buy_order,
+            'tp_order': tp_order,
+            'quantity': qty,
+            'entry_price': current_price,
+            'take_profit': object_sell_price
+        }
+        
+    except ClientError as e:
+        error_msg = f"주문 오류 발생: {e}"
+        print(error_msg)
+        return {
+            'status': 'error',
+            'error': error_msg
+        }
+
+
+def service_open_short_position(coin, usdt_amount, leverage, current_price, object_sell_price):
+    """
+    숏 포지션 진입 함수
+    과매수 상황에서 가격 하락을 예상하여 매도 포지션 진입
+    """
+    try:
+        # 레버리지와 마진 타입 설정
+        set_leverage(coin, leverage)
+        set_margin_type(coin, 'ISOLATED')  # 또는 'CROSS'
+        
+        qty_precision = get_qty_precision(coin)
+        qty = round(float(round(usdt_amount / current_price, 6)) * leverage, qty_precision)
+
+        # 매도 주문 (숏 포지션 진입)
+        sell_order = client.new_order(
+            symbol=coin, 
+            side="SELL", 
+            type='LIMIT', 
+            quantity=qty, 
+            timeInForce='GTC', 
+            price=current_price
+        )
+        
+        # 익절 주문 (매수로 포지션 종료)
+        tp_order = client.new_order(
+            symbol=coin, 
+            side="BUY", 
+            type='TAKE_PROFIT_MARKET', 
+            quantity=qty, 
+            timeInForce='GTC', 
+            stopPrice=object_sell_price
+        )
+        print(f"✅ 숏 익절 주문 설정: {object_sell_price}")
+        
+        return {
+            'status': 'success',
+            'sell_order': sell_order,
+            'tp_order': tp_order,
+            'quantity': qty,
+            'entry_price': current_price,
+            'take_profit': object_sell_price
+        }
+        
+    except ClientError as e:
+        error_msg = f"숏 포지션 오류 발생: {e}"
+        print(error_msg)
+        return {
+            'status': 'error',
+            'error': error_msg
+        }
