@@ -275,7 +275,6 @@ LOGGING = {
     'handlers': {
        'console': {
             'level': 'INFO',
-            'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
             'formatter': 'standard',
         },
@@ -286,7 +285,6 @@ LOGGING = {
         },
         'file': {
           'level': 'DEBUG',
-          'filters': ['require_debug_false'],
           'class': 'logging.handlers.TimedRotatingFileHandler',
           'filename': LOG_FILE,
           'when': "midnight",

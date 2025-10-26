@@ -1,17 +1,22 @@
 from apscheduler.schedulers.background import BackgroundScheduler  # schedulers → apscheduler
-from tradeapp.services import service_get_all_favorite_coins_rsi, service_klines, service_open_long_position, service_open_short_position, service_send_telegram_message
+from tradeapp.services import service_get_all_favorite_coins_rsi, service_get_available_balance_usdt, service_klines, service_open_long_position, service_open_short_position, service_send_telegram_message, service_check_if_ihave_this_coin
 import logging
 import datetime
 
 logging.getLogger('apscheduler').setLevel(logging.WARNING)
+logger = logging.getLogger('scheduler')
 
 def start():
 	scheduler = BackgroundScheduler(timezone='Asia/Seoul')
-   
-	@scheduler.scheduled_job('interval', seconds=60, name='rsi_check', id='rsi_check')
+
+	@scheduler.scheduled_job('interval', minutes=10, name='rsi_check', id='rsi_check')
 	def check_favorite_rsi():
 		try:
-			print('scheduler test', datetime.datetime.now())
+			# 내 지갑을 확인해서 20usd 이하로 있으면 더이상 실행하지 않기
+			if service_get_available_balance_usdt() < 20:
+				service_send_telegram_message('지갑 잔액이 20 USDT 이하입니다. RSI 체크를 중단합니다.')
+				return
+			service_send_telegram_message('scheduler test %s', datetime.datetime.now())
 			results = service_get_all_favorite_coins_rsi('15m')
 			
 			# 과매수/과매도 상황 찾기
@@ -23,15 +28,18 @@ def start():
 				for coin in overbought:
 					overbought_list.append(f"{coin['symbol']}: {coin['rsi']}")
 				
-				message = f"🔴 과매수 신호 감지!\n" + "\n".join(overbought_list)
-				print(f"🔴 과매수: {overbought_list}")
-				
+				message = f"🔴 과매수 신호 감지!\n" + "\n".join(overbought_list)				
 				try:
 					service_send_telegram_message(message)
 					
 					# 각 과매수 코인에 대해 숏 포지션 진입
 					for coin_data in overbought:
 						try:
+							# 현재 내가 이 코인을 이미 가지고 있다면 포지션에 진입하지 않기
+							if service_check_if_ihave_this_coin(coin_data['symbol']):
+								service_send_telegram_message(f"⚠️ {coin_data['symbol']} 이미 보유 중이므로 숏 포지션 진입 건너뜀")
+								continue
+							
 							# 현재 가격 가져오기
 							klines = service_klines(coin_data['symbol'], '15m', 1)
 							current_price = float(klines.iloc[-1]['Close'])
@@ -51,14 +59,14 @@ def start():
 							# 포지션 진입 결과 확인
 							if position_result and position_result.get('status') == 'success':
 								entry_msg = f"📉 숏 포지션 진입 성공: {coin_data['symbol']} @ {current_price}"
-								print(entry_msg)
+								logger.info(entry_msg)
 								service_send_telegram_message(entry_msg)
 							else:
 								error_msg = f"❌ 숏 포지션 진입 실패: {coin_data['symbol']}"
-								print(error_msg)
+								logger.error(error_msg)
 								if position_result and position_result.get('error'):
 									error_detail = f"실패 원인: {position_result['error']}"
-									print(error_detail)
+									logger.error(error_detail)
 									service_send_telegram_message(f"{error_msg}\n{error_detail}")
 							
 						except Exception as position_error:
@@ -78,6 +86,11 @@ def start():
 										# 각 과매도 코인에 대해 롱 포지션 진입
 					for coin_data in oversold:  # 루프 내부에서 처리
 						try:
+							# 현재 내가 이 코인을 이미 가지고 있다면 포지션에 진입하지 않기
+							if service_check_if_ihave_this_coin(coin_data['symbol']):
+								service_send_telegram_message(f"⚠️ {coin_data['symbol']} 이미 보유 중이므로 롱 포지션 진입 건너뜀")
+								continue
+							
 							# 현재 가격 가져오기
 							klines = service_klines(coin_data['symbol'], '15m', 1)
 							current_price = float(klines.iloc[-1]['Close'])
@@ -97,14 +110,13 @@ def start():
 							# 포지션 진입 결과 확인
 							if position_result and position_result.get('status') == 'success':
 								entry_msg = f"✅ 롱 포지션 진입 성공: {coin_data['symbol']} @ {current_price}"
-								print(entry_msg)
 								service_send_telegram_message(entry_msg)
 							else:
 								error_msg = f"❌ 롱 포지션 진입 실패: {coin_data['symbol']}"
-								print(error_msg)
+								logger.error(error_msg)
 								if position_result and position_result.get('error'):
 									error_detail = f"실패 원인: {position_result['error']}"
-									print(error_detail)
+									logger.error(error_detail)
 									service_send_telegram_message(f"{error_msg}\n{error_detail}")
 							
 						except Exception as position_error:
@@ -122,8 +134,10 @@ def start():
 		try:
 			current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 			message = f"💚 살아있어요! ({current_time})"
+			logger.info(message)
 			service_send_telegram_message(message)
 		except Exception as e:
 			logger.error(f'Heartbeat error: {e}')
 
 	scheduler.start()
+	logger.info("✅ Scheduler started!")
