@@ -3,7 +3,7 @@ from tradeapp.services import service_get_all_favorite_coins_rsi, service_klines
 import logging
 import datetime
 
-logger = logging.getLogger('scheduler')
+logging.getLogger('apscheduler').setLevel(logging.WARNING)
 
 def start():
 	scheduler = BackgroundScheduler(timezone='Asia/Seoul')
