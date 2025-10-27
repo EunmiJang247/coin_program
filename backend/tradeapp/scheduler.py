@@ -12,7 +12,6 @@ def start():
 	@scheduler.scheduled_job('interval', minutes=10, name='rsi_check', id='rsi_check')
 	def check_favorite_rsi():
 		try:
-			
 			service_send_telegram_message('10분마다 실행되는 생존 알림!')
 			# 내가 가지고 있는 코인들을 한번 돈다
 			my_wallet_positions = service_get_futures_wallet_balances()
@@ -72,7 +71,6 @@ def start():
 			if service_get_available_balance_usdt() < 20:
 				service_send_telegram_message('지갑 잔액이 20 USDT 이하입니다. RSI 체크를 중단합니다.')
 				return
-			service_send_telegram_message('scheduler test %s', datetime.datetime.now())
 			results = service_get_all_favorite_coins_rsi('15m')
 			
 			# 과매수/과매도 상황 찾기
