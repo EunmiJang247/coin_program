@@ -98,9 +98,6 @@ def start():
 							klines = service_klines(coin_data['symbol'], '15m', 1)
 							current_price = float(klines.iloc[-1]['Close'])
 							
-							# 익절가 계산 (현재가 - 2%)
-							take_profit_price = current_price * 0.98
-							
 							# 숏 포지션 진입
 							position_result = service_open_short_position(
 								coin_data['symbol'],

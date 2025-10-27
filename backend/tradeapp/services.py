@@ -1,3 +1,5 @@
+import math
+from time import time
 from decouple import config
 from binance.um_futures import UMFutures
 import telegram
@@ -605,39 +607,118 @@ def service_open_short_position(coin, usdt_amount, leverage, current_price):
             'error': error_msg
         }
 
-def service_close_position(symbol, position_amt):
-    '''
-    포지션 종료 함수
-    position_amt: 양수면 롱포지션, 음수면 숏포지션
-    '''
+
+def _get_symbol_filters(client, symbol):
+    """선물 exchangeInfo에서 lot stepSize, minQty, maxQty를 얻습니다."""
+    info = client.futures_exchange_info()
+    sym = next(s for s in info['symbols'] if s['symbol'] == symbol)
+    lot = next(f for f in sym['filters'] if f['filterType'] == 'LOT_SIZE')
+    step = float(lot['stepSize'])
+    min_qty = float(lot['minQty'])
+    max_qty = float(lot['maxQty'])
+    return step, min_qty, max_qty
+
+def _round_to_step(qty, step):
+    # step의 소수자릿수에 맞춰 floor
+    precision = int(round(-math.log10(step))) if step < 1 else 0
+    floored = math.floor(qty / step) * step
+    # 부동소수점 표시 깨짐 방지
+    return float(f"{floored:.{precision}f}")
+
+def _detect_hedge_mode(client):
+    # 헷지모드 여부
+    a = client.futures_account_config()
+    return a.get('dualSidePosition') is True
+
+def service_close_position(client, symbol, position_amt, *, max_attempts=3, sleep_sec=0.3, cancel_open_orders=False):
+    """
+    포지션 종료 (USDT-M 선물)
+    - position_amt: +면 롱 보유, -면 숏 보유
+    - 헷지모드/원웨이 모두 지원
+    - 수량 라운딩 및 reduceOnly 적용
+    """
     try:
-        if position_amt > 0:  # 롱 포지션 종료
-            side = "SELL"
-            quantity = abs(position_amt)
-        else:  # 숏 포지션 종료
-            side = "BUY"
-            quantity = abs(position_amt)
-        
-        close_order = client.new_order(
-            symbol=symbol,
-            side=side,
-            type='MARKET',
-            quantity=quantity
-        )
-        
-        print(f"✅ 포지션 종료: {symbol} {quantity}개")
-        
-        return {
-            'status': 'success',
-            'close_order': close_order,
-            'symbol': symbol,
-            'quantity': quantity
-        }
-        
-    except ClientError as e:
-        error_msg = f"포지션 종료 오류: {e}"
-        print(error_msg)
-        return {
-            'status': 'error',
-            'error': error_msg
-        }
+        # 0 가드
+        if not position_amt or abs(float(position_amt)) == 0.0:
+            return {'status': 'success', 'message': f'{symbol} 이미 청산됨', 'quantity': 0}
+
+        position_amt = float(position_amt)
+        side = "SELL" if position_amt > 0 else "BUY"  # 롱 닫기=SELL, 숏 닫기=BUY
+        pos_side = "LONG" if position_amt > 0 else "SHORT"
+
+        # 헷지 모드 확인
+        hedge = _detect_hedge_mode(client)
+
+        # 필요 시 기존 주문 취소(감축/TP/SL 등)
+        if cancel_open_orders:
+            try:
+                client.futures_cancel_all_open_orders(symbol=symbol)
+            except Exception as e:
+                print(f"[{symbol}] open orders cancel 실패(무시 가능): {e}")
+
+        # 수량 라운딩
+        step, min_qty, max_qty = _get_symbol_filters(client, symbol)
+        target_qty = abs(position_amt)
+        qty = max(min(_round_to_step(target_qty, step), max_qty), min_qty)
+
+        if qty < min_qty:
+            return {'status': 'error', 'error': f'{symbol} 최소 수량 미만: {qty} < {min_qty}'}
+
+        last_error = None
+        for attempt in range(1, max_attempts + 1):
+            try:
+                params = dict(
+                    symbol=symbol,
+                    side=side,
+                    type='MARKET',
+                    quantity=qty,
+                    reduceOnly=True,
+                    newOrderRespType='RESULT',
+                )
+                if hedge:
+                    params['positionSide'] = pos_side  # 헷지모드 필수
+
+                order = client.futures_create_order(**params)
+
+                # 잔여 포지션이 남았는지 확인 → 있으면 한 번 더 시도
+                # (정확한 잔여는 계좌 포지션을 다시 조회해야 함)
+                try:
+                    positions = client.futures_position_information(symbol=symbol)
+                    # 헷지면 LONG/SHORT 각자, 원웨이면 하나만 리턴
+                    remain = 0.0
+                    for p in positions:
+                        if hedge:
+                            if p.get('positionSide') != pos_side:  # 반대쪽은 무시
+                                continue
+                        amt = float(p['positionAmt'])
+                        # 같은 쪽의 절대 잔량만
+                        if (position_amt > 0 and amt > 0) or (position_amt < 0 and amt < 0):
+                            remain = abs(amt)
+                            break
+
+                    if remain <= 0:
+                        print(f"✅ 포지션 종료 완료: {symbol} {qty}")
+                        return {'status': 'success', 'close_order': order, 'symbol': symbol, 'quantity': qty}
+                    else:
+                        # 남은 양만큼 재라운딩해서 재시도
+                        qty = _round_to_step(remain, step)
+                        if qty < min_qty:
+                            print(f"✅ 포지션 거의 0, step/minQty 때문에 잔여 무시: remain={remain}")
+                            return {'status': 'success', 'close_order': order, 'symbol': symbol, 'quantity': qty, 'note': '잔여 미만'}
+                        time.sleep(sleep_sec)
+                        continue
+                except Exception as e:
+                    # 잔여 확인 실패 → 주문 자체는 보냈으니 성공으로 간주하거나 warning 처리
+                    print(f"[{symbol}] 잔여 확인 실패(성공 가능): {e}")
+                    return {'status': 'success', 'close_order': order, 'symbol': symbol, 'quantity': qty, 'note': '잔여 확인 실패'}
+
+            except ClientError as ce:
+                last_error = f"ClientError: {ce}"
+                print(f"[{symbol}] close attempt {attempt}/{max_attempts} 실패: {ce}")
+                time.sleep(sleep_sec)
+
+        return {'status': 'error', 'error': last_error or 'unknown error'}
+
+    except Exception as e:
+        print(f"[{symbol}] 포지션 종료 오류")
+        return {'status': 'error', 'error': str(e)}
