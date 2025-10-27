@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 
 '''
+    가지고 있는 선물 포지션들 service_get_futures_wallet_balances
     내가가진 모든돈. 포지션에 들어있는 것은 제외. service_get_available_balance_usdt
     가지고 있는 선물 포지션 배열로 주는 함수: get_futures_wallet_balances
     USDT를 기준으로 거래되는 모든 암호화폐의 종류를 배열로 출력: service_get_tickers_usdt
@@ -15,6 +16,8 @@ import numpy as np
     volume_of_avg_and_previous: 100개의 거래량 평균과 현재 캔들의 거래량 반환
     이평선의 기울기가 14개, 21개 모두 양인지: service_is_current_status_rising
     내가 이 코인을 가지고있는지 반환 bool(True/False) service_check_if_ihave_this_coin
+    숏포지션 진입 service_open_short_position
+    롱포지션 진입 service_open_long_position
 '''
 
 TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN')
@@ -596,6 +599,43 @@ def service_open_short_position(coin, usdt_amount, leverage, current_price):
         
     except ClientError as e:
         error_msg = f"숏 포지션 오류 발생: {e}"
+        print(error_msg)
+        return {
+            'status': 'error',
+            'error': error_msg
+        }
+
+def service_close_position(symbol, position_amt):
+    '''
+    포지션 종료 함수
+    position_amt: 양수면 롱포지션, 음수면 숏포지션
+    '''
+    try:
+        if position_amt > 0:  # 롱 포지션 종료
+            side = "SELL"
+            quantity = abs(position_amt)
+        else:  # 숏 포지션 종료
+            side = "BUY"
+            quantity = abs(position_amt)
+        
+        close_order = client.new_order(
+            symbol=symbol,
+            side=side,
+            type='MARKET',
+            quantity=quantity
+        )
+        
+        print(f"✅ 포지션 종료: {symbol} {quantity}개")
+        
+        return {
+            'status': 'success',
+            'close_order': close_order,
+            'symbol': symbol,
+            'quantity': quantity
+        }
+        
+    except ClientError as e:
+        error_msg = f"포지션 종료 오류: {e}"
         print(error_msg)
         return {
             'status': 'error',
