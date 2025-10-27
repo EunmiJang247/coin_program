@@ -53,7 +53,6 @@ def start():
 								10,                     # 10 USDT (테스트 금액)
 								5,                      # 5배 레버리지
 								current_price,          # 진입가
-								take_profit_price       # 익절가 (현재가 - 2%)
 							)
 							
 							# 포지션 진입 결과 확인
@@ -104,7 +103,6 @@ def start():
 								10,                     # 10 USDT (테스트 금액)
 								5,                      # 5배 레버리지 (안전한 레버리지)
 								current_price,          # coin['price'] → current_price
-								take_profit_price       # coin['take_profit'] → take_profit_price
 							)
 							
 							# 포지션 진입 결과 확인

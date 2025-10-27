@@ -146,18 +146,35 @@ def service_get_tickers_usdt():
 
 def get_my_favorite_coins_from_service():
     tickers = [
-    "BTCUSDT",  # Bitcoin  
-    "ETHUSDT",  # Ethereum  
-    "BNBUSDT",  # BNB  
-    "XRPUSDT",  # XRP  
-    "ADAUSDT",  # Cardano  
-    "LTCUSDT",  # Litecoin  
-    "BCHUSDT",  # Bitcoin Cash  
-    "XLMUSDT",  # Stellar  
-    "ZECUSDT",  # Zcash  
-    "ATOMUSDT", # Cosmos  
-    "VETUSDT",  # VeChain  
-    "TRXUSDT",  # TRON  
+    "BTCUSDT",
+    "ETHUSDT",
+    "BNBUSDT",
+    "XRPUSDT",
+    "ADAUSDT",
+    "SOLUSDT",
+    "DOGEUSDT",
+    "DOTUSDT",
+    "AVAXUSDT",
+    "LINKUSDT",
+    "MATICUSDT",
+    "LTCUSDT",
+    "TRXUSDT",
+    "BCHUSDT",
+    "UNIUSDT",
+    "ALGOUSDT",
+    "ATOMUSDT",
+    "XLMUSDT",
+    "NEARUSDT",
+    "FILUSDT",
+    "VETUSDT",
+    "FTTUSDT",
+    "HBARUSDT",
+    "ICPUSDT",
+    "SUIUSDT",
+    "APEUSDT",
+    "EGLDUSDT",
+    "KSMUSDT",
+    "RUNEUSDT",
     ]
     return tickers
 
@@ -511,7 +528,7 @@ def service_get_all_favorite_coins_rsi(interval='15m'):
     
     return results
 
-def service_open_long_position(coin, usdt_amount, leverage, current_price, object_sell_price):
+def service_open_long_position(coin, usdt_amount, leverage, current_price):
     # 레버리지와 마진 타입 설정 추가
     set_leverage(coin, leverage)
     set_margin_type(coin, 'ISOLATED')  # 또는 'CROSS'
@@ -531,24 +548,11 @@ def service_open_long_position(coin, usdt_amount, leverage, current_price, objec
         )
         print(f"✅ 롱 포지션 진입: {coin} {qty}개 @ {current_price}")
         
-        # 익절 주문 (Take Profit)
-        tp_order = client.new_order(
-            symbol=coin, 
-            side="SELL", 
-            type='TAKE_PROFIT_MARKET', 
-            quantity=qty, 
-            timeInForce='GTC', 
-            stopPrice=object_sell_price
-        )
-        print(f"✅ 익절 주문 설정: {object_sell_price}")
-        
         return {
             'status': 'success',
             'buy_order': buy_order,
-            'tp_order': tp_order,
             'quantity': qty,
-            'entry_price': current_price,
-            'take_profit': object_sell_price
+            'entry_price': current_price
         }
         
     except ClientError as e:
@@ -560,7 +564,7 @@ def service_open_long_position(coin, usdt_amount, leverage, current_price, objec
         }
 
 
-def service_open_short_position(coin, usdt_amount, leverage, current_price, object_sell_price):
+def service_open_short_position(coin, usdt_amount, leverage, current_price):
     """
     숏 포지션 진입 함수
     과매수 상황에서 가격 하락을 예상하여 매도 포지션 진입
@@ -583,24 +587,11 @@ def service_open_short_position(coin, usdt_amount, leverage, current_price, obje
             price=current_price
         )
         
-        # 익절 주문 (매수로 포지션 종료)
-        tp_order = client.new_order(
-            symbol=coin, 
-            side="BUY", 
-            type='TAKE_PROFIT_MARKET', 
-            quantity=qty, 
-            timeInForce='GTC', 
-            stopPrice=object_sell_price
-        )
-        print(f"✅ 숏 익절 주문 설정: {object_sell_price}")
-        
         return {
             'status': 'success',
             'sell_order': sell_order,
-            'tp_order': tp_order,
             'quantity': qty,
             'entry_price': current_price,
-            'take_profit': object_sell_price
         }
         
     except ClientError as e:
