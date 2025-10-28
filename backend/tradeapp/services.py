@@ -619,7 +619,7 @@ def _detect_hedge_mode(client):
     a = client.futures_account_config()
     return a.get('dualSidePosition') is True
 
-def service_close_position(client, symbol, position_amt, *, max_attempts=3, sleep_sec=0.3, cancel_open_orders=False):
+def service_close_position(symbol, position_amt, *, max_attempts=3, sleep_sec=0.3, cancel_open_orders=False):
     """
     포지션 종료 (USDT-M 선물)
     - position_amt: +면 롱 보유, -면 숏 보유

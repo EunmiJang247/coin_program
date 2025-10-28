@@ -51,6 +51,7 @@ def start():
 					
 					# 매도 실행
 					if should_sell:
+						service_send_telegram_message("매도실행이 진행됩니다")
 						close_result = service_close_position(symbol, position_amt)
 						if close_result and close_result.get('status') == 'success':
 							sell_msg = f"💰 포지션 종료 성공!\n{symbol}\n{sell_reason}"
