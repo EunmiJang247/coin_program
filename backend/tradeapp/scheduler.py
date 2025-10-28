@@ -2,6 +2,7 @@ from apscheduler.schedulers.background import BackgroundScheduler  # schedulers 
 from tradeapp.services import service_get_all_favorite_coins_rsi, service_get_available_balance_usdt, service_get_futures_wallet_balances, service_klines, service_open_long_position, service_open_short_position, service_send_telegram_message, service_check_if_ihave_this_coin, service_close_position, service_get_rsi
 import logging
 import datetime
+import time
 
 logging.getLogger('apscheduler').setLevel(logging.WARNING)
 logger = logging.getLogger('scheduler')
@@ -9,7 +10,14 @@ logger = logging.getLogger('scheduler')
 def start():
 	scheduler = BackgroundScheduler(timezone='Asia/Seoul')
 
-	@scheduler.scheduled_job('interval', minutes=10, name='rsi_check', id='rsi_check')
+	@scheduler.scheduled_job(
+     'interval',
+     minutes=10,
+     name='rsi_check',
+     id='rsi_check',
+     replace_existing=True,
+     coalesce=True,
+     max_instances=1)
 	def check_favorite_rsi():
 		try:
 			service_send_telegram_message('10분마다 실행되는 생존 알림!')
@@ -23,6 +31,7 @@ def start():
 					entry_price = float(position['entryPrice'])
 					current_price = float(position['markPrice'])
 					position_amt = float(position['positionAmt'])
+					update_time = int(position['updateTime'])  # 포지션 업데이트 시간 (밀리초)
 					
 					# RSI 값 가져오기
 					rsi_data = service_get_rsi(symbol, '15m')
@@ -31,23 +40,39 @@ def start():
 					if rsi_value is None:
 						continue
 					
+					# 현재 시간과 포지션 진입 시간 차이 계산 (시간 단위)
+					current_time_ms = int(time.time() * 1000)
+					hours_held = (current_time_ms - update_time) / (1000 * 60 * 60)
+					
 					# 매도 조건 확인
 					should_sell = False
 					sell_reason = ""
 					
 					if position_amt > 0:  # 롱 포지션
-						# 현재가가 진입가보다 높고 RSI가 70 이상
+						profit_percent = ((current_price - entry_price) / entry_price) * 100
+						
+						# 조건 1: 현재가가 진입가보다 높고 RSI가 70 이상
 						if current_price > entry_price and rsi_value >= 70:
 							should_sell = True
-							profit_percent = ((current_price - entry_price) / entry_price) * 100
-							sell_reason = f"롱 포지션 익절 조건 만족 (진입가: {entry_price:.4f}, 현재가: {current_price:.4f}, RSI: {rsi_value:.2f}, 수익률: {profit_percent:.2f}%)"
+							sell_reason = f"롱 포지션 RSI 익절 조건 만족 (진입가: {entry_price:.4f}, 현재가: {current_price:.4f}, RSI: {rsi_value:.2f}, 수익률: {profit_percent:.2f}%)"
+						
+						# 조건 2: 12시간 보유 후 수익이 있는 경우
+						elif hours_held >= 12 and current_price > entry_price:
+							should_sell = True
+							sell_reason = f"롱 포지션 12시간 보유 익절 (보유시간: {hours_held:.1f}시간, 진입가: {entry_price:.4f}, 현재가: {current_price:.4f}, 수익률: {profit_percent:.2f}%)"
 					
 					elif position_amt < 0:  # 숏 포지션
-						# 현재가가 진입가보다 낮고 RSI가 30 이하
+						profit_percent = ((entry_price - current_price) / entry_price) * 100
+						
+						# 조건 1: 현재가가 진입가보다 낮고 RSI가 30 이하
 						if current_price < entry_price and rsi_value <= 30:
 							should_sell = True
-							profit_percent = ((entry_price - current_price) / entry_price) * 100
-							sell_reason = f"숏 포지션 익절 조건 만족 (진입가: {entry_price:.4f}, 현재가: {current_price:.4f}, RSI: {rsi_value:.2f}, 수익률: {profit_percent:.2f}%)"
+							sell_reason = f"숏 포지션 RSI 익절 조건 만족 (진입가: {entry_price:.4f}, 현재가: {current_price:.4f}, RSI: {rsi_value:.2f}, 수익률: {profit_percent:.2f}%)"
+						
+						# 조건 2: 12시간 보유 후 수익이 있는 경우
+						elif hours_held >= 12 and current_price < entry_price:
+							should_sell = True
+							sell_reason = f"숏 포지션 12시간 보유 익절 (보유시간: {hours_held:.1f}시간, 진입가: {entry_price:.4f}, 현재가: {current_price:.4f}, 수익률: {profit_percent:.2f}%)"
 					
 					# 매도 실행
 					if should_sell:
